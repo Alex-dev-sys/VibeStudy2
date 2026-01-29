@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@import "tailwindcss";
+
+/* Custom theme configuration for Tailwind v4 */
+@theme {
+  --color-vibe-50: #faf5ff;
+  --color-vibe-100: #f3e8ff;
+  --color-vibe-200: #e9d5ff;
+  --color-vibe-300: #d8b4fe;
+  --color-vibe-400: #c084fc;
+  --color-vibe-500: #a855f7;
+  --color-vibe-600: #8b5cf6;
+  --color-vibe-700: #7c3aed;
+  --color-vibe-800: #6d28d9;
+  --color-vibe-900: #5b21b6;
+  --color-vibe-950: #3b0764;
+
+  --color-dark-900: #090516;
+  --color-dark-800: #0f0818;
+  --color-dark-700: #1e0b36;
+  --color-dark-600: #2d1054;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Design system colors for shadcn/ui compatibility */
+  --color-background: #0d0a1a;
+  --color-foreground: #ffffff;
+  --color-card: #1a1428;
+  --color-card-foreground: #ffffff;
+  --color-popover: #1a1428;
+  --color-popover-foreground: #ffffff;
+  --color-primary: #a855f7;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #2d2440;
+  --color-secondary-foreground: #ffffff;
+  --color-muted: #2d2440;
+  --color-muted-foreground: #a0a0a0;
+  --color-accent: #a855f7;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #3d3055;
+  --color-input: #2d2440;
+  --color-ring: #a855f7;
+
+  /* Chart colors */
+  --color-chart-1: #a855f7;
+  --color-chart-2: #f97316;
+  --color-chart-3: #22c55e;
+  --color-chart-4: #eab308;
+  --color-chart-5: #3b82f6;
+
+  /* Radius */
+  --radius: 0.75rem;
+}
+
+/* Base Styles */
+* {
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+body {
+  background: radial-gradient(ellipse at center, #1e0b36 0%, #090516 100%);
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0510;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7c3aed;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+
+/* Glassmorphism Card */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.1);
+}
+
+.glass-hover {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.2);
+}
+
+/* Neon Button */
+.btn-neon {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(to right, #8b5cf6, #a855f7);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-neon:hover {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.6), 0 0 60px rgba(139, 92, 246, 0.4);
+  transform: scale(1.05);
+}
+
+.btn-neon:active {
+  transform: scale(0.95);
+}
+
+.btn-neon-outline {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  background: transparent;
+  border: 2px solid #a855f7;
+  color: #d8b4fe;
+  transition: all 0.3s ease;
+}
+
+.btn-neon-outline:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: #c084fc;
+  color: white;
+}
+
+/* Text Gradient */
+.text-gradient {
+  background: linear-gradient(to right, #d8b4fe, #c084fc, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow Effect */
+.glow {
+  filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5));
+}
+
+/* Neon shadow utilities */
+.shadow-neon {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
+}
+
+.shadow-neon-lg {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.6), 0 0 60px rgba(139, 92, 246, 0.4);
+}
+
+/* Input Styles */
+.input-glass {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.input-glass::placeholder {
+  color: #9ca3af;
+}
+
+.input-glass:focus {
+  outline: none;
+  border-color: #a855f7;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Card Hover Animation */
+.card-hover {
+  transition: all 0.3s ease-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-8px);
+}
+
+/* Vibe gradient background */
+.bg-vibe-gradient {
+  background: radial-gradient(ellipse at center, #1e0b36 0%, #0a0510 100%);
+}
+
+.bg-vibe-glow {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+}
+
+/* Animation utilities */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.8);
+  }
+}
+
+/* Three.js Canvas Fix */
+canvas {
+  display: block;
+}
