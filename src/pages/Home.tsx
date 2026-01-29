@@ -19,60 +19,60 @@ import {
 
 // Mock data
 const stats = [
-    { icon: Zap, label: 'Total XP', value: '12,450', trend: '+250 today', color: 'from-yellow-400 to-orange-500' },
-    { icon: Flame, label: 'Day Streak', value: '14', trend: 'Personal best!', color: 'from-orange-500 to-red-500' },
-    { icon: BookOpen, label: 'Lessons', value: '47', trend: '3 this week', color: 'from-green-400 to-emerald-500' },
-    { icon: Trophy, label: 'Global Rank', value: '#1,247', trend: 'Top 5%', color: 'from-vibe-400 to-vibe-600' },
+    { icon: Zap, label: 'Всего XP', value: '12,450', trend: '+250 сегодня', color: 'from-yellow-400 to-orange-500' },
+    { icon: Flame, label: 'Дней подряд', value: '14', trend: 'Личный рекорд!', color: 'from-orange-500 to-red-500' },
+    { icon: BookOpen, label: 'Уроков', value: '47', trend: '3 на этой неделе', color: 'from-green-400 to-emerald-500' },
+    { icon: Trophy, label: 'Глобальный рейтинг', value: '#1,247', trend: 'Топ 5%', color: 'from-vibe-400 to-vibe-600' },
 ];
 
 const weeklyActivity = [
-    { day: 'Mon', value: 80, completed: true },
-    { day: 'Tue', value: 100, completed: true },
-    { day: 'Wed', value: 60, completed: true },
-    { day: 'Thu', value: 90, completed: true },
-    { day: 'Fri', value: 40, completed: true },
-    { day: 'Sat', value: 70, completed: true },
-    { day: 'Sun', value: 0, completed: false },
+    { day: 'Пн', value: 80, completed: true },
+    { day: 'Вт', value: 100, completed: true },
+    { day: 'Ср', value: 60, completed: true },
+    { day: 'Чт', value: 90, completed: true },
+    { day: 'Пт', value: 40, completed: true },
+    { day: 'Сб', value: 70, completed: true },
+    { day: 'Вс', value: 0, completed: false },
 ];
 
 const currentLesson = {
-    title: 'Advanced Python: Decorators & Generators',
+    title: 'Продвинутый Python: Декораторы и Генераторы',
     language: 'Python',
     progress: 68,
     xp: 150,
-    timeLeft: '25 min',
+    timeLeft: '25 мин',
 };
 
 const careerPath = {
-    title: 'Backend Developer',
+    title: 'Backend-разработчик',
     progress: 42,
     milestones: [
-        { name: 'Python Basics', completed: true },
-        { name: 'Data Structures', completed: true },
-        { name: 'APIs & REST', completed: false, active: true },
-        { name: 'Databases', completed: false },
+        { name: 'Основы Python', completed: true },
+        { name: 'Структуры данных', completed: true },
+        { name: 'API и REST', completed: false, active: true },
+        { name: 'Базы данных', completed: false },
         { name: 'DevOps', completed: false },
     ],
 };
 
 const dailyChallenge = {
-    title: 'Binary Search Tree Traversal',
-    difficulty: 'Medium',
+    title: 'Обход бинарного дерева поиска',
+    difficulty: 'Средний',
     xp: 200,
     language: 'Python',
-    timeLimit: '30 min',
+    timeLimit: '30 мин',
 };
 
 const recentAchievements = [
-    { icon: '🏆', name: 'Speed Demon', desc: 'Solved 5 challenges in 1 hour' },
-    { icon: '🔥', name: '2-Week Streak', desc: 'Coded for 14 days straight' },
-    { icon: '⭐', name: 'Python Master', desc: 'Completed Python track' },
+    { icon: '🏆', name: 'Скоростной демон', desc: 'Решил 5 задач за час' },
+    { icon: '🔥', name: '2 недели подряд', desc: 'Кодил 14 дней подряд' },
+    { icon: '⭐', name: 'Мастер Python', desc: 'Завершил трек Python' },
 ];
 
 export default function Home() {
-    const userName = 'Alex';
+    const userName = 'Алекс';
     const currentHour = new Date().getHours();
-    const greeting = currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening';
+    const greeting = currentHour < 12 ? 'Доброе утро' : currentHour < 18 ? 'Добрый день' : 'Добрый вечер';
 
     return (
         <div className="min-h-screen relative">
@@ -90,7 +90,7 @@ export default function Home() {
                         <h1 className="text-3xl font-bold text-white mb-1">
                             {greeting}, <span className="text-gradient">{userName}</span> 👋
                         </h1>
-                        <p className="text-gray-400">Ready to level up your skills today?</p>
+                        <p className="text-gray-400">Готовы прокачать свои навыки сегодня?</p>
                     </div>
                     <div className="flex items-center gap-4">
                         <motion.div
@@ -99,7 +99,7 @@ export default function Home() {
                         >
                             <Flame className="w-5 h-5 text-orange-500" />
                             <span className="font-bold text-white">14</span>
-                            <span className="text-gray-400 text-sm">day streak</span>
+                            <span className="text-gray-400 text-sm">дней подряд</span>
                         </motion.div>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -154,7 +154,7 @@ export default function Home() {
                                     <div>
                                         <p className="text-vibe-400 text-sm font-medium mb-2 flex items-center gap-2">
                                             <BookOpen className="w-4 h-4" />
-                                            Continue Learning
+                                            Продолжить обучение
                                         </p>
                                         <h3 className="text-2xl font-bold text-white mb-2">{currentLesson.title}</h3>
                                         <div className="flex items-center gap-4 text-sm text-gray-400">
@@ -177,7 +177,7 @@ export default function Home() {
                                             className="btn-neon px-6 py-3 flex items-center gap-2"
                                         >
                                             <Play className="w-5 h-5" />
-                                            Continue
+                                            Продолжить
                                         </motion.button>
                                     </Link>
                                 </div>
@@ -185,7 +185,7 @@ export default function Home() {
                                 {/* Progress Bar */}
                                 <div className="relative">
                                     <div className="flex justify-between text-sm mb-2">
-                                        <span className="text-gray-400">Progress</span>
+                                        <span className="text-gray-400">Прогресс</span>
                                         <span className="text-white font-medium">{currentLesson.progress}%</span>
                                     </div>
                                     <div className="h-3 bg-dark-700 rounded-full overflow-hidden">
@@ -212,9 +212,9 @@ export default function Home() {
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <Calendar className="w-5 h-5 text-vibe-400" />
-                                    Weekly Activity
+                                    Активность за неделю
                                 </h3>
-                                <span className="text-sm text-gray-400">6/7 days completed</span>
+                                <span className="text-sm text-gray-400">6/7 дней выполнено</span>
                             </div>
                             <div className="grid grid-cols-7 gap-3">
                                 {weeklyActivity.map((day, index) => (
@@ -227,8 +227,8 @@ export default function Home() {
                                     >
                                         <div
                                             className={`w-full aspect-square rounded-xl flex items-center justify-center mb-2 transition-all ${day.completed
-                                                    ? 'bg-gradient-to-br from-vibe-500 to-vibe-600 shadow-neon'
-                                                    : 'bg-dark-700 border border-dashed border-gray-600'
+                                                ? 'bg-gradient-to-br from-vibe-500 to-vibe-600 shadow-neon'
+                                                : 'bg-dark-700 border border-dashed border-gray-600'
                                                 }`}
                                             style={{ opacity: day.completed ? 0.4 + (day.value / 100) * 0.6 : 0.5 }}
                                         >
@@ -253,12 +253,12 @@ export default function Home() {
                                 <div>
                                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                         <Target className="w-5 h-5 text-vibe-400" />
-                                        Career Path: {careerPath.title}
+                                        Карьерный путь: {careerPath.title}
                                     </h3>
-                                    <p className="text-sm text-gray-400">{careerPath.progress}% complete</p>
+                                    <p className="text-sm text-gray-400">{careerPath.progress}% завершено</p>
                                 </div>
                                 <Link to="/profile" className="text-vibe-400 hover:text-vibe-300 text-sm flex items-center gap-1">
-                                    View All <ChevronRight className="w-4 h-4" />
+                                    Смотреть всё <ChevronRight className="w-4 h-4" />
                                 </Link>
                             </div>
 
@@ -276,10 +276,10 @@ export default function Home() {
                                             animate={{ scale: 1 }}
                                             transition={{ delay: 0.5 + index * 0.1 }}
                                             className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${milestone.completed
-                                                    ? 'bg-gradient-to-br from-vibe-500 to-vibe-600 shadow-neon'
-                                                    : milestone.active
-                                                        ? 'bg-vibe-500/30 border-2 border-vibe-500 animate-pulse'
-                                                        : 'bg-dark-700 border border-gray-600'
+                                                ? 'bg-gradient-to-br from-vibe-500 to-vibe-600 shadow-neon'
+                                                : milestone.active
+                                                    ? 'bg-vibe-500/30 border-2 border-vibe-500 animate-pulse'
+                                                    : 'bg-dark-700 border border-gray-600'
                                                 }`}
                                         >
                                             {milestone.completed ? (
@@ -310,7 +310,7 @@ export default function Home() {
                             <div className="relative z-10">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Brain className="w-5 h-5 text-vibe-400" />
-                                    <span className="text-vibe-400 font-medium">AI Daily Challenge</span>
+                                    <span className="text-vibe-400 font-medium">AI Задача дня</span>
                                 </div>
                                 <h4 className="text-xl font-bold text-white mb-3">{dailyChallenge.title}</h4>
                                 <div className="flex flex-wrap gap-2 mb-4">
@@ -335,7 +335,7 @@ export default function Home() {
                                             whileTap={{ scale: 0.95 }}
                                             className="btn-neon px-4 py-2 text-sm"
                                         >
-                                            Start Challenge
+                                            Начать
                                         </motion.button>
                                     </Link>
                                 </div>
@@ -352,10 +352,10 @@ export default function Home() {
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <Award className="w-5 h-5 text-vibe-400" />
-                                    Achievements
+                                    Достижения
                                 </h3>
                                 <Link to="/profile" className="text-vibe-400 hover:text-vibe-300 text-sm">
-                                    View All
+                                    Смотреть всё
                                 </Link>
                             </div>
                             <div className="space-y-3">
@@ -390,7 +390,7 @@ export default function Home() {
                                     className="glass-hover p-4 text-center cursor-pointer"
                                 >
                                     <Code2 className="w-6 h-6 text-vibe-400 mx-auto mb-2" />
-                                    <span className="text-sm text-gray-300">Playground</span>
+                                    <span className="text-sm text-gray-300">Песочница</span>
                                 </motion.div>
                             </Link>
                             <Link to="/analytics">
@@ -399,7 +399,7 @@ export default function Home() {
                                     className="glass-hover p-4 text-center cursor-pointer"
                                 >
                                     <TrendingUp className="w-6 h-6 text-vibe-400 mx-auto mb-2" />
-                                    <span className="text-sm text-gray-300">Analytics</span>
+                                    <span className="text-sm text-gray-300">Аналитика</span>
                                 </motion.div>
                             </Link>
                         </motion.div>

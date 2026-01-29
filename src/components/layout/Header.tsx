@@ -14,12 +14,12 @@ import {
 } from 'lucide-react';
 
 const navLinks = [
-    { path: '/home', label: 'Dashboard', icon: Home },
-    { path: '/lessons', label: 'Lessons', icon: BookOpen },
-    { path: '/playground', label: 'Playground', icon: Code2 },
-    { path: '/challenges', label: 'Challenges', icon: Trophy },
-    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { path: '/profile', label: 'Profile', icon: User },
+    { path: '/home', label: 'Главная', icon: Home },
+    { path: '/lessons', label: 'Уроки', icon: BookOpen },
+    { path: '/playground', label: 'Песочница', icon: Code2 },
+    { path: '/challenges', label: 'Задачи', icon: Trophy },
+    { path: '/analytics', label: 'Аналитика', icon: BarChart3 },
+    { path: '/profile', label: 'Профиль', icon: User },
 ];
 
 export default function Header() {
@@ -96,7 +96,7 @@ export default function Header() {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    Get Started
+                                    Начать
                                 </motion.button>
                             </Link>
                         </div>
@@ -164,7 +164,7 @@ export default function Header() {
                                     >
                                         <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
                                             <button className="btn-neon w-full">
-                                                Get Started
+                                                Начать
                                             </button>
                                         </Link>
                                     </motion.div>

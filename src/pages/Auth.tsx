@@ -37,7 +37,7 @@ export default function Auth() {
             if (error) throw error;
             setIsSuccess(true);
         } catch (err: any) {
-            setError(err.message || 'Something went wrong');
+            setError(err.message || 'Что-то пошло не так');
         } finally {
             setIsLoading(false);
         }
@@ -53,7 +53,7 @@ export default function Auth() {
             });
             if (error) throw error;
         } catch (err: any) {
-            setError(err.message || 'OAuth login failed');
+            setError(err.message || 'Ошибка авторизации');
         }
     };
 
@@ -127,24 +127,24 @@ export default function Auth() {
                                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
                                     <CheckCircle2 className="w-10 h-10 text-green-400" />
                                 </div>
-                                <h2 className="text-2xl font-bold text-white mb-3">Check Your Email</h2>
+                                <h2 className="text-2xl font-bold text-white mb-3">Проверьте почту</h2>
                                 <p className="text-gray-400 mb-6">
-                                    We sent a magic link to<br />
+                                    Мы отправили ссылку на<br />
                                     <span className="text-vibe-300 font-medium">{email}</span>
                                 </p>
                                 <button
                                     onClick={() => setIsSuccess(false)}
                                     className="text-vibe-400 hover:text-vibe-300 transition-colors"
                                 >
-                                    Use a different email
+                                    Использовать другую почту
                                 </button>
                             </motion.div>
                         ) : (
                             <>
                                 {/* Title */}
                                 <div className="text-center mb-8">
-                                    <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-                                    <p className="text-gray-400">Continue your learning journey</p>
+                                    <h1 className="text-3xl font-bold text-white mb-2">Добро пожаловать!</h1>
+                                    <p className="text-gray-400">Продолжите обучение</p>
                                 </div>
 
                                 {/* Error Message */}
@@ -166,7 +166,7 @@ export default function Auth() {
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="Enter your email"
+                                            placeholder="Введите email"
                                             className="input-glass pl-16 pr-4 py-4 text-lg w-full"
                                             required
                                         />
@@ -183,7 +183,7 @@ export default function Auth() {
                                         ) : (
                                             <>
                                                 <Sparkles className="w-5 h-5" />
-                                                Continue with Magic Link
+                                                Войти по ссылке
                                                 <ArrowRight className="w-5 h-5" />
                                             </>
                                         )}
@@ -196,7 +196,7 @@ export default function Auth() {
                                         <div className="w-full border-t border-white/10"></div>
                                     </div>
                                     <div className="relative flex justify-center text-sm">
-                                        <span className="px-4 bg-dark-800 text-gray-500">or continue with</span>
+                                        <span className="px-4 bg-dark-800 text-gray-500">или войдите через</span>
                                     </div>
                                 </div>
 
@@ -224,9 +224,9 @@ export default function Auth() {
 
                                 {/* Sign Up Link */}
                                 <p className="text-center text-gray-500">
-                                    Don't have an account?{' '}
+                                    Нет аккаунта?{' '}
                                     <button className="text-vibe-400 hover:text-vibe-300 font-medium transition-colors">
-                                        Sign up for free
+                                        Зарегистрироваться
                                     </button>
                                 </p>
                             </>
@@ -236,10 +236,10 @@ export default function Auth() {
 
                 {/* Terms */}
                 <p className="text-center text-gray-600 text-xs mt-6">
-                    By continuing, you agree to our{' '}
-                    <a href="#" className="text-vibe-500 hover:underline">Terms of Service</a>
-                    {' '}and{' '}
-                    <a href="#" className="text-vibe-500 hover:underline">Privacy Policy</a>
+                    Продолжая, вы соглашаетесь с{' '}
+                    <a href="#" className="text-vibe-500 hover:underline">Условиями использования</a>
+                    {' '}и{' '}
+                    <a href="#" className="text-vibe-500 hover:underline">Политикой конфиденциальности</a>
                 </p>
             </motion.div>
         </div>
