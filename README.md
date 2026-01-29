@@ -11,94 +11,94 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Enabled-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-**The AI-Powered IT Education Platform for the Future.**
+**Платформа IT-образования будущего с поддержкой ИИ.**
 </div>
 
 ---
 
-## ✨ Overview
+## ✨ Обзор
 
-**VibeStudy** is a next-generation learning platform designed to accelerate your journey into IT. Combining state-of-the-art AI tutoring with a gamified, hands-on coding environment, VibeStudy makes mastering complex programming concepts intuitive and engaging.
+**VibeStudy** — это образовательная платформа нового поколения, созданная для ускоренного погружения в мир IT. Сочетая передовые технологии ИИ-репетиторства с геймифицированной средой и практикой написания кода, VibeStudy делает освоение сложных концепций программирования интуитивным и увлекательным.
 
-### 🌟 Key Features
+### 🌟 Ключевые Возможности
 
--   **🤖 AI Learning Assistant**: Personalized tutoring that adapts to your unique learning style.
--   **💻 Browser-Based IDE**: Start coding instantly in cloud environments with intelligent autocomplete.
--   **🗺️ Interactive Career Tracks**: Structured roadmaps guided by industry standards.
--   **🏆 Gamified Challenges**: Earn streaks, badges, and climb leaderboards while you learn.
--   **📊 Smart Analytics**: Track your progress with detailed insights and performance metrics.
--   **🎨 Premium UI/UX**: A stunning, dark-mode-first interface using Glassmorphism and smooth animations.
+-   **🤖 ИИ-Ассистент**: Персональный репетитор, который адаптируется к вашему стилю обучения.
+-   **💻 Браузерная IDE**: Начинайте кодить мгновенно в облачной среде с умным автодополнением.
+-   **🗺️ Интерактивные Карьерные Треки**: Структурированные дорожные карты, разработанные на основе требований индустрии.
+-   **🏆 Геймификация**: Выполняйте челленджи, поддерживайте стрик (серию) занятий, получайте бейджи и поднимайтесь в таблице лидеров.
+-   **📊 Умная Аналитика**: Отслеживайте свой прогресс с помощью детальных метрик и инсайтов.
+-   **🎨 Премиум UI/UX**: Потрясающий интерфейс в темной теме с использованием глассморфизма и плавных анимаций.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Технологический Стек
 
 -   **Frontend**: React 19, React Router 7
--   **Styling**: Tailwind CSS v4, Framer Motion (Animations), Lucide React (Icons)
--   **Language**: TypeScript
--   **3D Graphics**: Three.js, React Three Fiber
--   **Backend / Auth**: Supabase
--   **State Management**: Zustand
--   **Build Tool**: Vite
+-   **Стилизация**: Tailwind CSS v4, Framer Motion (Анимации), Lucide React (Иконки)
+-   **Язык**: TypeScript
+-   **3D Графика**: Three.js, React Three Fiber
+-   **Backend / Авторизация**: Supabase
+-   **Управление Состоянием**: Zustand
+-   **Сборщик**: Vite
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Начало Работы
 
-Follow these steps to get a local copy running.
+Следуйте этим шагам, чтобы запустить проект локально.
 
-### Prerequisites
+### Предварительные требования
 
--   Node.js (v18 or higher)
--   npm or yarn
+-   Node.js (v18 или выше)
+-   npm или yarn
 
-### Installation
+### Установка
 
-1.  **Clone the repository**
+1.  **Клонируйте репозиторий**
     ```bash
-    git clone https://github.com/yourusername/vibestudy.git
-    cd vibestudy
+    git clone https://github.com/Alex-dev-sys/VibeStudy2.git
+    cd vibestudy-2-0
     ```
 
-2.  **Install dependencies**
+2.  **Установите зависимости**
     ```bash
     npm install
     ```
 
-3.  **Start the development server**
+3.  **Запустите сервер разработки**
     ```bash
     npm run dev
     ```
 
-4.  **Open your browser**
-    Navigate to `http://localhost:5173` to see the app in action!
+4.  **Откройте в браузере**
+    Перейдите по адресу `http://localhost:5173`, чтобы увидеть приложение в действии!
 
 ---
 
-## 📸 Screenshots
+## 📸 Скриншоты
 
-*(Add your screenshots here)*
-
----
-
-## 🤝 Contributing
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+*(Добавьте ваши скриншоты сюда)*
 
 ---
 
-## 📄 License
+## 🤝 Вклад в проект (Contributing)
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Мы приветствуем любой вклад в развитие проекта!
+
+1.  Форкните проект (Fork)
+2.  Создайте ветку для вашей фичи (`git checkout -b feature/AmazingFeature`)
+3.  Закоммитьте изменения (`git commit -m 'Add some AmazingFeature'`)
+4.  Запушьте ветку (`git push origin feature/AmazingFeature`)
+5.  Откройте Pull Request
+
+---
+
+## 📄 Лицензия
+
+Распространяется под лицензией MIT. Смотрите файл `LICENSE` для получения дополнительной информации.
 
 ---
 
 <div align="center">
-  <p>Made with ❤️ by the VibeStudy Team</p>
+  <p>Сделано с ❤️ коммандой VibeStudy</p>
 </div>
