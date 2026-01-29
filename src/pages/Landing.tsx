@@ -28,31 +28,31 @@ const languages = [
 const features = [
     {
         icon: Brain,
-        title: 'AI Learning Assistant',
-        description: 'Your personal tutor available 24/7. Adapts to your learning style with custom examples and explanations.',
+        title: 'ИИ-Ассистент',
+        description: 'Твой личный репетитор, доступный 24/7. Адаптируется под твой стиль обучения с персональными примерами и объяснениями.',
     },
     {
         icon: Terminal,
-        title: 'Browser IDE',
-        description: 'Start coding instantly with zero setup. Powerful cloud-based IDE with intelligent autocomplete.',
+        title: 'Браузерная IDE',
+        description: 'Начинай кодить мгновенно без настройки. Мощная облачная IDE с умным автодополнением.',
     },
     {
         icon: Target,
-        title: 'Career Tracks',
-        description: 'Follow structured roadmaps designed by industry experts to become job-ready.',
+        title: 'Карьерные треки',
+        description: 'Следуй структурированным планам обучения от экспертов индустрии, чтобы стать готовым к работе.',
     },
     {
         icon: Trophy,
-        title: 'Daily Challenges',
-        description: 'Build a coding habit with gamified challenges. Earn streaks, badges, and climb the leaderboard.',
+        title: 'Ежедневные задачи',
+        description: 'Выработай привычку кодить с помощью геймифицированных задач. Зарабатывай стрики, бейджи и поднимайся в рейтинге.',
     },
 ];
 
 const stats = [
-    { value: '10M+', label: 'Active Learners' },
-    { value: '50+', label: 'Languages & Frameworks' },
-    { value: '98%', label: 'Satisfaction Rate' },
-    { value: '500K+', label: 'Challenges Completed' },
+    { value: '10M+', label: 'Активных учеников' },
+    { value: '50+', label: 'Языков и фреймворков' },
+    { value: '98%', label: 'Уровень удовлетворенности' },
+    { value: '500K+', label: 'Завершенных задач' },
 ];
 
 export default function Landing() {
@@ -95,11 +95,11 @@ export default function Landing() {
                             animate={{ opacity: 1, y: 0 }}
                             className="hidden md:flex items-center gap-8"
                         >
-                            <a href="#features" className="text-gray-400 hover:text-white transition-colors">Features</a>
-                            <a href="#languages" className="text-gray-400 hover:text-white transition-colors">Languages</a>
-                            <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</a>
+                            <a href="#features" className="text-gray-400 hover:text-white transition-colors">Возможности</a>
+                            <a href="#languages" className="text-gray-400 hover:text-white transition-colors">Языки</a>
+                            <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">Цены</a>
                             <Link to="/auth" className="btn-neon px-6 py-2">
-                                Start Learning
+                                Начать обучение
                             </Link>
                         </motion.div>
                     </div>
@@ -116,7 +116,7 @@ export default function Landing() {
                             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass mb-8 border border-vibe-500/30"
                         >
                             <Sparkles className="w-4 h-4 text-vibe-400" />
-                            <span className="text-sm font-medium text-vibe-300">AI-Powered IT Education</span>
+                            <span className="text-sm font-medium text-vibe-300">IT-образование с ИИ</span>
                         </motion.div>
 
                         {/* Main Heading */}
@@ -130,7 +130,7 @@ export default function Landing() {
                             <span className="text-gradient">Study</span>
                             <br />
                             <span className="text-4xl md:text-5xl text-gray-300 font-medium">
-                                Your AI-powered path to IT
+                                Твой путь в IT с искусственным интеллектом
                             </span>
                         </motion.h1>
 
@@ -141,8 +141,8 @@ export default function Landing() {
                             transition={{ duration: 0.6, delay: 0.2 }}
                             className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed"
                         >
-                            Master coding 10x faster with personalized AI curriculum,
-                            real-time code analysis, and a community of future tech leaders.
+                            Освой программирование в 10 раз быстрее с персональным ИИ-учебным планом,
+                            анализом кода в реальном времени и сообществом будущих лидеров технологий.
                         </motion.p>
 
                         {/* CTA Buttons */}
@@ -159,7 +159,7 @@ export default function Landing() {
                                     whileTap={{ scale: 0.95 }}
                                 >
                                     <Rocket className="w-5 h-5" />
-                                    Start Learning Free
+                                    Начать бесплатно
                                     <ArrowRight className="w-5 h-5" />
                                 </motion.button>
                             </Link>
@@ -170,7 +170,7 @@ export default function Landing() {
                                     whileTap={{ scale: 0.95 }}
                                 >
                                     <Play className="w-5 h-5" />
-                                    Try Playground
+                                    Попробовать песочницу
                                 </motion.button>
                             </Link>
                         </motion.div>
@@ -210,10 +210,10 @@ export default function Landing() {
                         className="text-center mb-12"
                     >
                         <h2 className="text-4xl font-bold text-white mb-4">
-                            Master 7+ Programming Languages
+                            Освой 7+ языков программирования
                         </h2>
                         <p className="text-gray-400 text-lg">
-                            From beginner to expert, at your own pace
+                            От новичка до эксперта, в своем темпе
                         </p>
                     </motion.div>
 
@@ -245,11 +245,11 @@ export default function Landing() {
                         className="text-center mb-16"
                     >
                         <h2 className="text-4xl font-bold text-white mb-4">
-                            Experience the Future of Coding
+                            Почувствуй будущее программирования
                         </h2>
                         <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                            Our platform combines state-of-the-art AI with proven learning methodologies
-                            to accelerate your career growth.
+                            Наша платформа объединяет передовой ИИ с проверенными методиками обучения
+                            для ускорения твоего карьерного роста.
                         </p>
                     </motion.div>
 
@@ -300,11 +300,11 @@ export default function Landing() {
                                 <Zap className="w-10 h-10 text-white" />
                             </motion.div>
                             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                                Ready to Code?
+                                Готов кодить?
                             </h2>
                             <p className="text-gray-400 mb-10 max-w-xl mx-auto text-lg">
-                                Join thousands of developers building the future.
-                                Start your free trial today and unlock the power of AI-assisted learning.
+                                Присоединяйся к тысячам разработчиков, создающих будущее.
+                                Начни бесплатное пробное занятие сегодня и открой силу обучения с ИИ.
                             </p>
                             <Link to="/auth">
                                 <motion.button
@@ -312,10 +312,10 @@ export default function Landing() {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    Get Started — It's Free
+                                    Начать — Это бесплатно
                                 </motion.button>
                             </Link>
-                            <p className="text-gray-500 mt-4 text-sm">No credit card required</p>
+                            <p className="text-gray-500 mt-4 text-sm">Кредитная карта не требуется</p>
                         </div>
                     </motion.div>
                 </section>
@@ -331,40 +331,40 @@ export default function Landing() {
                                 <span className="text-xl font-bold text-white">VibeStudy</span>
                             </div>
                             <p className="text-gray-500 text-sm">
-                                Empowering the next generation of developers with AI-driven tools.
+                                Расширяем возможности нового поколения разработчиков с помощью ИИ-инструментов.
                             </p>
                         </div>
 
                         <div>
-                            <h4 className="text-white font-semibold mb-4">Platform</h4>
+                            <h4 className="text-white font-semibold mb-4">Платформа</h4>
                             <ul className="space-y-2 text-gray-500 text-sm">
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Courses</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Practice</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Pricing</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Курсы</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Практика</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Цены</a></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="text-white font-semibold mb-4">Resources</h4>
+                            <h4 className="text-white font-semibold mb-4">Ресурсы</h4>
                             <ul className="space-y-2 text-gray-500 text-sm">
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Blog</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Cheatsheets</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Community</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Блог</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Шпаргалки</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Сообщество</a></li>
                             </ul>
                         </div>
 
                         <div>
-                            <h4 className="text-white font-semibold mb-4">Company</h4>
+                            <h4 className="text-white font-semibold mb-4">Компания</h4>
                             <ul className="space-y-2 text-gray-500 text-sm">
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">About Us</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Careers</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Contact</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">О нас</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Карьера</a></li>
+                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Контакты</a></li>
                             </ul>
                         </div>
                     </div>
 
                     <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/5">
-                        <p className="text-gray-600 text-sm">© 2025 VibeStudy Inc. All rights reserved.</p>
+                        <p className="text-gray-600 text-sm">© 2025 VibeStudy Inc. Все права защищены.</p>
                         <div className="flex gap-4 mt-4 md:mt-0">
                             <a href="#" className="text-gray-500 hover:text-vibe-400 transition-colors">Twitter</a>
                             <a href="#" className="text-gray-500 hover:text-vibe-400 transition-colors">GitHub</a>
