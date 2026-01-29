@@ -10,8 +10,6 @@ import {
     Target,
     Trophy,
     Terminal,
-    Users,
-    BookOpen,
     Play
 } from 'lucide-react';
 

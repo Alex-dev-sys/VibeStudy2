@@ -45,7 +45,7 @@ export function WeeklyActivity() {
                                 borderRadius: '8px',
                                 color: '#fff'
                             }}
-                            formatter={(value: number) => [`${value}h`, 'Hours']}
+                            formatter={(value) => [`${value ?? 0}h`, 'Hours']}
                         />
                         <Bar
                             dataKey="hours"

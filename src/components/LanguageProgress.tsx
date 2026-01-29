@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { Progress } from './ui/progress'
 
 const languages = [
     { name: 'Python', progress: 78, color: 'from-blue-500 to-cyan-500' },
