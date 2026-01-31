@@ -13,9 +13,7 @@ import {
     ArrowLeft,
     Loader2,
     BookOpen,
-    Play,
-    Target,
-    ChevronDown
+    Target
 } from 'lucide-react';
 import { courses, getCourseById, type DayLesson } from '../data/courses';
 import { useAIGeneration } from '../hooks/useAIGeneration';
@@ -230,7 +228,6 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
     const { completeTask, completeLesson, isTaskCompleted } = useProgressStore();
     const { getLesson, setLesson } = useLessonStore();
     const { generateLesson, generatedContent, isLoading, error } = useAIGeneration();
-    const [showTopics, setShowTopics] = useState(true);
     const [selectedTask, setSelectedTask] = useState<{ id: number; title: string; description: string; difficulty: 'easy' | 'medium' | 'hard'; codeTemplate?: string } | null>(null);
     const [localCompletedTasks, setLocalCompletedTasks] = useState<number[]>([]);
 
@@ -282,7 +279,7 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
         <div className="min-h-screen relative">
             <div className="fixed inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900 -z-10" />
 
-            <div className="max-w-5xl mx-auto px-6 py-8">
+            <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -344,45 +341,6 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
                     </div>
                 </motion.div>
 
-                {/* Topics */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="glass p-6 mb-6"
-                >
-                    <button
-                        onClick={() => setShowTopics(!showTopics)}
-                        className="w-full flex items-center justify-between"
-                    >
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            <BookOpen className="w-5 h-5 text-vibe-400" />
-                            Темы урока
-                        </h2>
-                        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showTopics ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    <AnimatePresence>
-                        {showTopics && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="mt-4 grid md:grid-cols-2 gap-3"
-                            >
-                                {lesson.topics.map((topic, i) => (
-                                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-dark-700/50">
-                                        <span className="w-6 h-6 rounded-full bg-vibe-500/20 text-vibe-400 text-sm flex items-center justify-center">
-                                            {i + 1}
-                                        </span>
-                                        <span className="text-gray-300">{topic}</span>
-                                    </div>
-                                ))}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </motion.div>
-
                 {/* Generate Button or Content */}
                 <AnimatePresence mode="wait">
                     {!generatedContent && !isLoading ? (
@@ -434,108 +392,120 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
                                 </div>
                             )}
 
-                            {/* Theory */}
-                            <div className="glass p-8 mb-6">
-                                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                    <BookOpen className="w-5 h-5 text-vibe-400" />
-                                    Теория
-                                </h2>
-                                <div className="prose prose-invert max-w-none">
-                                    <div
-                                        className="text-gray-300 leading-relaxed"
-                                        dangerouslySetInnerHTML={{
-                                            __html: generatedContent.theory
-                                                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-dark-900 rounded-xl p-4 overflow-x-auto"><code>$2</code></pre>')
-                                                .replace(/`([^`]+)`/g, '<code class="bg-dark-700 px-2 py-1 rounded text-vibe-300">$1</code>')
-                                                .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-white mt-6 mb-3">$1</h3>')
-                                                .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-8 mb-4">$1</h2>')
-                                                .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-white mb-4">$1</h1>')
-                                                .replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white">$1</strong>')
-                                                .replace(/\n\n/g, '</p><p class="mb-4">')
-                                        }}
-                                    />
-                                </div>
-                            </div>
+                            {/* Two Column Layout: Theory + Tasks Sidebar */}
+                            <div className="flex gap-8">
+                                {/* Theory - Main Content */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="glass p-8">
+                                        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                            <BookOpen className="w-5 h-5 text-vibe-400" />
+                                            Теория
+                                        </h2>
+                                        <div className="prose prose-invert max-w-none">
+                                            <div
+                                                className="text-gray-300 leading-relaxed"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: generatedContent.theory
+                                                        .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-dark-900 rounded-xl p-4 overflow-x-auto"><code>$2</code></pre>')
+                                                        .replace(/`([^`]+)`/g, '<code class="bg-dark-700 px-2 py-1 rounded text-vibe-300">$1</code>')
+                                                        .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-white mt-6 mb-3">$1</h3>')
+                                                        .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-8 mb-4">$1</h2>')
+                                                        .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-white mb-4">$1</h1>')
+                                                        .replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white">$1</strong>')
+                                                        .replace(/\n\n/g, '</p><p class="mb-4">')
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
 
-                            {/* Tasks */}
-                            <div className="glass p-8">
-                                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                    <Target className="w-5 h-5 text-vibe-400" />
-                                    Практические задания ({generatedContent.tasks.length})
-                                </h2>
-                                <div className="space-y-4">
-                                    {generatedContent.tasks.map((task, index) => (
-                                        <motion.div
-                                            key={task.id}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: index * 0.1 }}
-                                            className="p-5 rounded-xl bg-dark-700/50 hover:bg-dark-700 transition-colors"
+                                    {/* Complete Button */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="mt-8 flex justify-center"
+                                    >
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            className="btn-neon px-8 py-4 text-lg flex items-center gap-2"
                                         >
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="w-8 h-8 rounded-lg bg-vibe-500/20 text-vibe-400 font-bold flex items-center justify-center">
-                                                        {index + 1}
-                                                    </span>
-                                                    <h3 className="font-semibold text-white">{task.title}</h3>
-                                                </div>
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.difficulty === 'easy'
-                                                    ? 'bg-green-500/20 text-green-400'
-                                                    : task.difficulty === 'medium'
-                                                        ? 'bg-yellow-500/20 text-yellow-400'
-                                                        : 'bg-red-500/20 text-red-400'
-                                                    }`}>
-                                                    {task.difficulty === 'easy' ? 'Легко' : task.difficulty === 'medium' ? 'Средне' : 'Сложно'}
+                                            <CheckCircle2 className="w-5 h-5" />
+                                            Завершить урок
+                                        </motion.button>
+                                    </motion.div>
+                                </div>
+
+                                {/* Tasks - Sticky Sidebar */}
+                                <div className="w-96 flex-shrink-0">
+                                    <div className="sticky top-8">
+                                        <div className="glass p-6 rounded-2xl border border-vibe-500/20">
+                                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                                <Target className="w-5 h-5 text-vibe-400" />
+                                                Задания
+                                                <span className="ml-auto text-sm font-normal text-gray-400">
+                                                    {localCompletedTasks.length}/{generatedContent.tasks.length}
                                                 </span>
+                                            </h2>
+
+                                            {/* Progress bar */}
+                                            <div className="h-2 bg-dark-700 rounded-full mb-4 overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${(localCompletedTasks.length / generatedContent.tasks.length) * 100}%` }}
+                                                    className="h-full bg-gradient-to-r from-vibe-500 to-vibe-400 rounded-full"
+                                                />
                                             </div>
-                                            <p className="text-gray-400 text-sm mb-3">{task.description}</p>
-                                            {task.codeTemplate && (
-                                                <pre className="bg-dark-900 rounded-lg p-3 text-sm text-gray-300 overflow-x-auto">
-                                                    <code>{task.codeTemplate}</code>
-                                                </pre>
-                                            )}
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                onClick={() => setSelectedTask(task)}
-                                                disabled={localCompletedTasks.includes(task.id)}
-                                                className={`mt-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${localCompletedTasks.includes(task.id)
-                                                    ? 'bg-green-500/20 text-green-400 cursor-default'
-                                                    : 'bg-vibe-500/20 text-vibe-300 hover:bg-vibe-500/30'
-                                                    }`}
-                                            >
-                                                {localCompletedTasks.includes(task.id) ? (
-                                                    <>
-                                                        <CheckCircle2 className="w-4 h-4" />
-                                                        Выполнено
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Play className="w-4 h-4" />
-                                                        Выполнить
-                                                    </>
-                                                )}
-                                            </motion.button>
-                                        </motion.div>
-                                    ))}
+
+                                            <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto pr-2">
+                                                {generatedContent.tasks.map((task, index) => (
+                                                    <motion.div
+                                                        key={task.id}
+                                                        initial={{ opacity: 0, x: 20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: index * 0.1 }}
+                                                        className={`p-4 rounded-xl transition-all cursor-pointer ${localCompletedTasks.includes(task.id)
+                                                            ? 'bg-green-500/10 border border-green-500/30'
+                                                            : 'bg-dark-700/50 hover:bg-dark-700 border border-transparent hover:border-vibe-500/30'
+                                                            }`}
+                                                        onClick={() => !localCompletedTasks.includes(task.id) && setSelectedTask(task)}
+                                                    >
+                                                        <div className="flex items-start gap-3">
+                                                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${localCompletedTasks.includes(task.id)
+                                                                ? 'bg-green-500/20'
+                                                                : 'bg-vibe-500/20'
+                                                                }`}>
+                                                                {localCompletedTasks.includes(task.id) ? (
+                                                                    <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                                                ) : (
+                                                                    <span className="text-xs font-bold text-vibe-400">{index + 1}</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <h3 className={`font-medium text-sm truncate ${localCompletedTasks.includes(task.id) ? 'text-green-400' : 'text-white'
+                                                                        }`}>
+                                                                        {task.title}
+                                                                    </h3>
+                                                                    <span className={`px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${task.difficulty === 'easy'
+                                                                        ? 'bg-green-500/20 text-green-400'
+                                                                        : task.difficulty === 'medium'
+                                                                            ? 'bg-yellow-500/20 text-yellow-400'
+                                                                            : 'bg-red-500/20 text-red-400'
+                                                                        }`}>
+                                                                        {task.difficulty === 'easy' ? '🟢' : task.difficulty === 'medium' ? '🟡' : '🔴'}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-gray-500 text-xs line-clamp-2">{task.description}</p>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Complete Button */}
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.5 }}
-                                className="mt-8 flex justify-center"
-                            >
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="btn-neon px-8 py-4 text-lg flex items-center gap-2"
-                                >
-                                    <CheckCircle2 className="w-5 h-5" />
-                                    Завершить урок
-                                </motion.button>
-                            </motion.div>
                         </motion.div>
                     ) : null}
                 </AnimatePresence>

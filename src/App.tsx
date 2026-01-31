@@ -55,6 +55,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="auth" element={<Auth />} />
         <Route element={<Layout />}>
           <Route path="home" element={<Home />} />
           <Route path="lessons" element={<Lessons />} />
@@ -64,7 +65,6 @@ function App() {
           <Route path="challenges" element={<Challenges />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="auth" element={<Auth />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
     Code2,
-    Mail,
     Sparkles,
     ArrowRight,
     Github,
     Chrome,
     Loader2,
-    CheckCircle2
+    CheckCircle2,
+    Zap
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -55,6 +55,11 @@ export default function Auth() {
         } catch (err: any) {
             setError(err.message || 'Ошибка авторизации');
         }
+    };
+
+    const handleTestLogin = () => {
+        // Просто переходим на /home без авторизации для тестирования
+        window.location.href = '/home';
     };
 
     return (
@@ -161,13 +166,12 @@ export default function Auth() {
                                 {/* Magic Link Form */}
                                 <form onSubmit={handleMagicLink} className="mb-6">
                                     <div className="relative mb-4">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                         <input
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="Введите email"
-                                            className="input-glass pl-16 pr-4 py-4 text-lg w-full"
+                                            className="input-glass px-4 py-4 text-lg w-full"
                                             required
                                         />
                                     </div>
@@ -201,7 +205,7 @@ export default function Auth() {
                                 </div>
 
                                 {/* Social Login */}
-                                <div className="grid grid-cols-2 gap-4 mb-8">
+                                <div className="grid grid-cols-2 gap-4 mb-6">
                                     <motion.button
                                         onClick={() => handleOAuthLogin('google')}
                                         className="btn-neon-outline py-3 flex items-center justify-center gap-2"
@@ -221,6 +225,17 @@ export default function Auth() {
                                         GitHub
                                     </motion.button>
                                 </div>
+
+                                {/* Test Login Button */}
+                                <motion.button
+                                    onClick={handleTestLogin}
+                                    className="w-full py-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 transition-colors flex items-center justify-center gap-2 mb-6"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    <Zap className="w-5 h-5" />
+                                    Войти без регистрации (тест)
+                                </motion.button>
 
                                 {/* Sign Up Link */}
                                 <p className="text-center text-gray-500">
