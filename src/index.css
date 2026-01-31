@@ -252,3 +252,48 @@ html {
 canvas {
   display: block;
 }
+
+/* GPU-accelerated floating orb animations */
+.floating-orb {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.floating-orb-1 {
+  animation: floatOrb1 12s ease-in-out infinite;
+}
+
+.floating-orb-2 {
+  animation: floatOrb2 10s ease-in-out infinite;
+}
+
+@keyframes floatOrb1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(50px, 30px, 0);
+  }
+}
+
+@keyframes floatOrb2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-30px, -50px, 0);
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .floating-orb,
+  .animate-float,
+  .animate-pulse-glow {
+    animation: none !important;
+  }
+  
+  .card-hover:hover {
+    transform: none;
+  }
+}

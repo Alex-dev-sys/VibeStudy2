@@ -1,14 +1,19 @@
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
+
+// Check if user prefers reduced motion
+const prefersReducedMotion = typeof window !== 'undefined'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false;
 
 function ParticleField() {
     const ref = useRef<THREE.Points>(null);
     const mouseRef = useRef({ x: 0, y: 0 });
 
-    // Generate random particle positions
-    const particleCount = 700;
+    // Reduced particle count for better performance
+    const particleCount = 300;
     const positions = useMemo(() => {
         const pos = new Float32Array(particleCount * 3);
         for (let i = 0; i < particleCount; i++) {
@@ -20,48 +25,42 @@ function ParticleField() {
         return pos;
     }, []);
 
-    // Mouse movement handler
-    const handleMouseMove = (event: MouseEvent) => {
-        mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    };
-
-    // Add mouse listener
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            window.addEventListener('mousemove', handleMouseMove);
-            return () => window.removeEventListener('mousemove', handleMouseMove);
-        }
+    // Throttled mouse movement handler
+    const handleMouseMove = useMemo(() => {
+        let lastCall = 0;
+        return (event: MouseEvent) => {
+            const now = Date.now();
+            if (now - lastCall < 50) return; // Throttle to 20fps
+            lastCall = now;
+            mouseRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseRef.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        };
     }, []);
 
-    // Animation loop
+    useEffect(() => {
+        if (typeof window !== 'undefined' && !prefersReducedMotion) {
+            window.addEventListener('mousemove', handleMouseMove, { passive: true });
+            return () => window.removeEventListener('mousemove', handleMouseMove);
+        }
+    }, [handleMouseMove]);
+
+    // Simplified animation loop - only rotation, no per-particle updates
     useFrame((state) => {
-        if (!ref.current) return;
+        if (!ref.current || prefersReducedMotion) return;
 
         const time = state.clock.getElapsedTime();
 
-        // Slow rotation
-        ref.current.rotation.x = time * 0.02 + mouseRef.current.y * 0.2;
-        ref.current.rotation.y = time * 0.03 + mouseRef.current.x * 0.2;
-
-        // Floating wave effect
-        const positions = ref.current.geometry.attributes.position.array as Float32Array;
-        for (let i = 0; i < particleCount; i++) {
-            const i3 = i * 3;
-            const x = positions[i3];
-
-            // Simple floating effect
-            positions[i3 + 1] += Math.sin(time + x) * 0.002;
-        }
-        ref.current.geometry.attributes.position.needsUpdate = true;
+        // Simple rotation only - much faster than updating particle positions
+        ref.current.rotation.x = time * 0.02 + mouseRef.current.y * 0.1;
+        ref.current.rotation.y = time * 0.03 + mouseRef.current.x * 0.1;
     });
 
     return (
-        <Points ref={ref} positions={positions} stride={3} frustumCulled={false}>
+        <Points ref={ref} positions={positions} stride={3} frustumCulled>
             <PointMaterial
                 transparent
                 color="#8b5cf6"
-                size={0.05}
+                size={0.06}
                 sizeAttenuation={true}
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
@@ -74,24 +73,34 @@ function GlowingSphere() {
     const meshRef = useRef<THREE.Mesh>(null);
 
     useFrame((state) => {
-        if (!meshRef.current) return;
+        if (!meshRef.current || prefersReducedMotion) return;
         const time = state.clock.getElapsedTime();
-        meshRef.current.scale.setScalar(1 + Math.sin(time) * 0.1);
+        meshRef.current.scale.setScalar(1 + Math.sin(time * 0.5) * 0.05);
     });
 
     return (
         <mesh ref={meshRef} position={[0, 0, -5]}>
-            <sphereGeometry args={[2, 32, 32]} />
+            <sphereGeometry args={[2, 16, 16]} />
             <meshBasicMaterial
                 color="#6d28d9"
                 transparent
-                opacity={0.1}
+                opacity={0.08}
             />
         </mesh>
     );
 }
 
 export default function ParticleBackground() {
+    const [isVisible, setIsVisible] = useState(true);
+
+    // Disable on low-end devices
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const isLowEnd = navigator.hardwareConcurrency <= 4 || prefersReducedMotion;
+            setIsVisible(!isLowEnd);
+        }
+    }, []);
+
     return (
         <div className="fixed inset-0 -z-10">
             {/* Base gradient background */}
@@ -105,23 +114,32 @@ export default function ParticleBackground() {
                 }}
             />
 
-            {/* Three.js Canvas */}
-            <Canvas
-                camera={{ position: [0, 0, 5], fov: 75 }}
-                style={{ background: 'transparent' }}
-            >
-                <ambientLight intensity={0.5} />
-                <ParticleField />
-                <GlowingSphere />
-            </Canvas>
+            {/* Three.js Canvas - only render if device can handle it */}
+            {isVisible && (
+                <Canvas
+                    camera={{ position: [0, 0, 5], fov: 60 }}
+                    style={{ background: 'transparent' }}
+                    dpr={[1, 1.5]} // Limit pixel ratio for performance
+                    performance={{ min: 0.5 }} // Allow frame drops
+                    gl={{
+                        antialias: false,
+                        powerPreference: 'high-performance',
+                        alpha: true
+                    }}
+                >
+                    <ParticleField />
+                    <GlowingSphere />
+                </Canvas>
+            )}
 
             {/* Noise overlay for texture */}
             <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                className="absolute inset-0 opacity-[0.02] pointer-events-none"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
                 }}
             />
         </div>
     );
 }
+

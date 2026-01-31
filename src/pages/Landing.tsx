@@ -60,17 +60,9 @@ export default function Landing() {
             <div className="fixed inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900" />
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-vibe-900/20 via-transparent to-transparent" />
 
-            {/* Floating orbs */}
-            <motion.div
-                className="fixed top-20 left-20 w-96 h-96 bg-vibe-600/10 rounded-full blur-3xl"
-                animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-                className="fixed bottom-20 right-20 w-80 h-80 bg-vibe-500/10 rounded-full blur-3xl"
-                animate={{ x: [0, -30, 0], y: [0, -50, 0] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            />
+            {/* Floating orbs - using CSS animation for performance */}
+            <div className="fixed top-20 left-20 w-96 h-96 bg-vibe-600/10 rounded-full blur-3xl floating-orb floating-orb-1" />
+            <div className="fixed bottom-20 right-20 w-80 h-80 bg-vibe-500/10 rounded-full blur-3xl floating-orb floating-orb-2" />
 
             {/* Content */}
             <div className="relative z-10">
@@ -290,13 +282,12 @@ export default function Landing() {
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-vibe-500 to-transparent" />
 
                         <div className="relative z-10">
-                            <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-vibe-500 to-vibe-700 flex items-center justify-center shadow-neon-lg"
+                            <div
+                                className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-vibe-500 to-vibe-700 flex items-center justify-center shadow-neon-lg animate-spin"
+                                style={{ animationDuration: '20s' }}
                             >
                                 <Zap className="w-10 h-10 text-white" />
-                            </motion.div>
+                            </div>
                             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
                                 Готов кодить?
                             </h2>

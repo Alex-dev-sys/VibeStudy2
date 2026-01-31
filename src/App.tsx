@@ -1,17 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
 import MobileNotSupported from './pages/MobileNotSupported';
-import Home from './pages/Home';
-import Playground from './pages/Playground';
-import Challenges from './pages/Challenges';
-import Analytics from './pages/Analytics';
-import Profile from './pages/Profile';
 import Auth from './pages/Auth';
-import Lessons from './pages/Lessons';
 import { useAuthStore } from './stores/useAuthStore';
 import { useProgressStore } from './stores/useProgressStore';
+
+// Lazy load heavy pages for code splitting
+const Home = lazy(() => import('./pages/Home'));
+const Playground = lazy(() => import('./pages/Playground'));
+const Challenges = lazy(() => import('./pages/Challenges'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Lessons = lazy(() => import('./pages/Lessons'));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="animate-pulse flex flex-col items-center gap-4">
+      <div className="w-12 h-12 rounded-full bg-primary/20 animate-spin border-2 border-primary border-t-transparent" />
+      <span className="text-muted-foreground">Загрузка...</span>
+    </div>
+  </div>
+);
 
 function App() {
   const { initialize, user, isInitialized } = useAuthStore();
@@ -53,22 +65,25 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="auth" element={<Auth />} />
-        <Route element={<Layout />}>
-          <Route path="home" element={<Home />} />
-          <Route path="lessons" element={<Lessons />} />
-          <Route path="lessons/:courseId" element={<Lessons />} />
-          <Route path="lessons/:courseId/:dayParam" element={<Lessons />} />
-          <Route path="playground" element={<Playground />} />
-          <Route path="challenges" element={<Challenges />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="profile" element={<Profile />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="auth" element={<Auth />} />
+          <Route element={<Layout />}>
+            <Route path="home" element={<Home />} />
+            <Route path="lessons" element={<Lessons />} />
+            <Route path="lessons/:courseId" element={<Lessons />} />
+            <Route path="lessons/:courseId/:dayParam" element={<Lessons />} />
+            <Route path="playground" element={<Playground />} />
+            <Route path="challenges" element={<Challenges />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="profile" element={<Profile />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
 
 export default App;
+
