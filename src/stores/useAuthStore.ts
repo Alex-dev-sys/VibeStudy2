@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { Session, Subscription, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '../types/database.types';
-import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthState {
     user: User | null;
@@ -11,13 +11,19 @@ interface AuthState {
     isLoading: boolean;
     isInitialized: boolean;
 
-    // Actions
     initialize: () => Promise<void>;
     setSession: (session: Session | null) => void;
     fetchProfile: () => Promise<void>;
     updateProfile: (updates: Partial<Profile>) => Promise<void>;
     addXP: (amount: number) => Promise<void>;
     signOut: () => Promise<void>;
+}
+
+let authSubscription: Subscription | null = null;
+let initializePromise: Promise<void> | null = null;
+
+function isAbortError(error: unknown) {
+    return error instanceof Error && error.name === 'AbortError';
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -30,42 +36,75 @@ export const useAuthStore = create<AuthState>()(
             isInitialized: false,
 
             initialize: async () => {
-                try {
-                    // Get current session
-                    const { data: { session } } = await supabase.auth.getSession();
+                if (initializePromise) {
+                    return initializePromise;
+                }
 
-                    if (session) {
-                        set({
-                            session,
-                            user: session.user,
-                            isLoading: true
-                        });
-                        await get().fetchProfile();
-                    }
+                initializePromise = (async () => {
+                    set({ isLoading: true });
 
-                    // Listen for auth changes
-                    supabase.auth.onAuthStateChange(async (event, session) => {
-                        console.log('Auth event:', event);
-                        set({ session, user: session?.user ?? null });
+                    try {
+                        const { data } = await supabase.auth.getSession();
+                        const session = data.session;
 
                         if (session) {
+                            set({
+                                session,
+                                user: session.user,
+                                isLoading: true,
+                            });
                             await get().fetchProfile();
                         } else {
-                            set({ profile: null });
+                            set({
+                                session: null,
+                                user: null,
+                                profile: null,
+                            });
                         }
-                    });
 
-                    set({ isInitialized: true, isLoading: false });
-                } catch (error) {
-                    console.error('Auth initialization error:', error);
-                    set({ isLoading: false, isInitialized: true });
-                }
+                        if (!authSubscription) {
+                            const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+                                console.log('Auth event:', event);
+                                set({
+                                    session,
+                                    user: session?.user ?? null,
+                                });
+
+                                if (session) {
+                                    void get().fetchProfile();
+                                } else {
+                                    set({ profile: null });
+                                }
+                            });
+
+                            authSubscription = authListener.subscription;
+                        }
+
+                        set({ isInitialized: true, isLoading: false });
+                    } catch (error) {
+                        if (!isAbortError(error)) {
+                            console.error('Auth initialization error:', error);
+                        }
+
+                        set({
+                            session: null,
+                            user: null,
+                            profile: null,
+                            isLoading: false,
+                            isInitialized: true,
+                        });
+                    } finally {
+                        initializePromise = null;
+                    }
+                })();
+
+                return initializePromise;
             },
 
             setSession: (session) => {
                 set({
                     session,
-                    user: session?.user ?? null
+                    user: session?.user ?? null,
                 });
             },
 
@@ -81,9 +120,8 @@ export const useAuthStore = create<AuthState>()(
                         .single();
 
                     if (error) {
-                        // Profile doesn't exist, create it
                         if (error.code === 'PGRST116') {
-                            const newProfile: Partial<Profile> = {
+                            const newProfile: { id: string } & Pick<Profile, 'full_name' | 'avatar_url' | 'current_streak' | 'longest_streak' | 'total_xp' | 'level'> = {
                                 id: user.id,
                                 full_name: user.user_metadata?.full_name || null,
                                 avatar_url: user.user_metadata?.avatar_url || null,
@@ -93,12 +131,13 @@ export const useAuthStore = create<AuthState>()(
                                 level: 1,
                             };
 
-                            const { data: created } = await supabase
+                            const { data: created, error: createError } = await supabase
                                 .from('profiles')
                                 .insert(newProfile)
                                 .select()
                                 .single();
 
+                            if (createError) throw createError;
                             set({ profile: created as Profile });
                         } else {
                             throw error;
@@ -148,14 +187,13 @@ export const useAuthStore = create<AuthState>()(
                 set({
                     user: null,
                     session: null,
-                    profile: null
+                    profile: null,
                 });
             },
         }),
         {
             name: 'auth-storage',
             partialize: (state) => ({
-                // Only persist these fields
                 user: state.user,
                 profile: state.profile,
             }),

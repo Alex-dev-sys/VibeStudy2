@@ -1,46 +1,71 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
-import type { UserProgress, CompletedTask } from '../types/database.types';
+import { useAuthStore } from './useAuthStore';
+import type { CompletedTask, UserProgress } from '../types/database.types';
 
 interface ProgressState {
-    // Progress data
     courseProgress: Record<string, UserProgress>;
     completedTasks: CompletedTask[];
     isLoading: boolean;
     isSyncing: boolean;
     lastSync: string | null;
+    ownerUserId: string | null;
 
-    // Actions
     fetchProgress: (userId: string) => Promise<void>;
     getProgress: (courseId: string) => UserProgress | null;
     getCompletedDays: (courseId: string) => number[];
     isLessonCompleted: (courseId: string, day: number) => boolean;
     isTaskCompleted: (courseId: string, day: number, taskId: number) => boolean;
 
-    // Mutations
     completeLesson: (userId: string, courseId: string, day: number) => Promise<void>;
     completeTask: (userId: string, courseId: string, day: number, taskId: number, code?: string) => Promise<number>;
     updateCurrentDay: (userId: string, courseId: string, day: number) => Promise<void>;
-
-    // Sync
+    resetAccountProgress: () => Promise<boolean>;
     syncToSupabase: () => Promise<void>;
+    resetProgress: () => void;
 }
+
+function isAbortError(error: unknown) {
+    return error instanceof Error && error.name === 'AbortError';
+}
+
+async function hasSession() {
+    const { data } = await supabase.auth.getSession();
+    return Boolean(data.session);
+}
+
+const emptyProgressState = {
+    courseProgress: {},
+    completedTasks: [],
+    lastSync: null,
+    ownerUserId: null,
+};
 
 export const useProgressStore = create<ProgressState>()(
     persist(
         (set, get) => ({
-            courseProgress: {},
-            completedTasks: [],
+            ...emptyProgressState,
             isLoading: false,
             isSyncing: false,
-            lastSync: null,
 
             fetchProgress: async (userId: string) => {
-                set({ isLoading: true });
+                const currentOwnerUserId = get().ownerUserId;
+                if (currentOwnerUserId && currentOwnerUserId !== userId) {
+                    set({ ...emptyProgressState, isLoading: false, ownerUserId: userId });
+                }
+
+                if (!(await hasSession())) {
+                    set({
+                        ...emptyProgressState,
+                        isLoading: false,
+                    });
+                    return;
+                }
+
+                set({ isLoading: true, ownerUserId: userId });
 
                 try {
-                    // Fetch course progress
                     const { data: progressData, error: progressError } = await supabase
                         .from('user_progress')
                         .select('*')
@@ -49,11 +74,10 @@ export const useProgressStore = create<ProgressState>()(
                     if (progressError) throw progressError;
 
                     const progressMap: Record<string, UserProgress> = {};
-                    progressData?.forEach((p) => {
-                        progressMap[p.course_id] = p as UserProgress;
+                    progressData?.forEach((progress) => {
+                        progressMap[progress.course_id] = progress as UserProgress;
                     });
 
-                    // Fetch completed tasks
                     const { data: tasksData, error: tasksError } = await supabase
                         .from('completed_tasks')
                         .select('*')
@@ -63,19 +87,20 @@ export const useProgressStore = create<ProgressState>()(
 
                     set({
                         courseProgress: progressMap,
-                        completedTasks: tasksData as CompletedTask[] || [],
+                        completedTasks: (tasksData as CompletedTask[]) || [],
                         isLoading: false,
                         lastSync: new Date().toISOString(),
+                        ownerUserId: userId,
                     });
                 } catch (error) {
-                    console.error('Error fetching progress:', error);
+                    if (!isAbortError(error)) {
+                        console.error('Error fetching progress:', error);
+                    }
                     set({ isLoading: false });
                 }
             },
 
-            getProgress: (courseId: string) => {
-                return get().courseProgress[courseId] || null;
-            },
+            getProgress: (courseId: string) => get().courseProgress[courseId] || null,
 
             getCompletedDays: (courseId: string) => {
                 const progress = get().courseProgress[courseId];
@@ -89,11 +114,15 @@ export const useProgressStore = create<ProgressState>()(
 
             isTaskCompleted: (courseId: string, day: number, taskId: number) => {
                 return get().completedTasks.some(
-                    t => t.course_id === courseId && t.day === day && t.task_id === taskId
+                    (task) => task.course_id === courseId && task.day === day && task.task_id === taskId
                 );
             },
 
             completeLesson: async (userId: string, courseId: string, day: number) => {
+                if (!(await hasSession())) {
+                    return;
+                }
+
                 const currentProgress = get().courseProgress[courseId];
                 const completedDays = currentProgress?.completed_days || [];
 
@@ -104,15 +133,18 @@ export const useProgressStore = create<ProgressState>()(
                 try {
                     const { data, error } = await supabase
                         .from('user_progress')
-                        .upsert({
-                            user_id: userId,
-                            course_id: courseId,
-                            current_day: Math.max(day + 1, currentProgress?.current_day || 1),
-                            completed_days: newCompletedDays,
-                            last_activity: new Date().toISOString(),
-                        }, {
-                            onConflict: 'user_id,course_id'
-                        })
+                        .upsert(
+                            {
+                                user_id: userId,
+                                course_id: courseId,
+                                current_day: Math.max(day + 1, currentProgress?.current_day || 1),
+                                completed_days: newCompletedDays,
+                                last_activity: new Date().toISOString(),
+                            },
+                            {
+                                onConflict: 'user_id,course_id',
+                            }
+                        )
                         .select()
                         .single();
 
@@ -123,28 +155,46 @@ export const useProgressStore = create<ProgressState>()(
                             ...state.courseProgress,
                             [courseId]: data as UserProgress,
                         },
+                        ownerUserId: userId,
                     }));
                 } catch (error) {
-                    console.error('Error completing lesson:', error);
+                    if (!isAbortError(error)) {
+                        console.error('Error completing lesson:', error);
+                    }
                 }
             },
 
             completeTask: async (userId: string, courseId: string, day: number, taskId: number, code?: string) => {
-                const xpEarned = 10; // Base XP per task
+                if (!(await hasSession())) {
+                    return 0;
+                }
+
+                const alreadyCompleted = get().completedTasks.some(
+                    (task) => task.course_id === courseId && task.day === day && task.task_id === taskId
+                );
+
+                if (alreadyCompleted) {
+                    return 0;
+                }
+
+                const xpEarned = 10;
 
                 try {
                     const { data, error } = await supabase
                         .from('completed_tasks')
-                        .upsert({
-                            user_id: userId,
-                            course_id: courseId,
-                            day,
-                            task_id: taskId,
-                            code: code || null,
-                            xp_earned: xpEarned,
-                        }, {
-                            onConflict: 'user_id,course_id,day,task_id'
-                        })
+                        .upsert(
+                            {
+                                user_id: userId,
+                                course_id: courseId,
+                                day,
+                                task_id: taskId,
+                                code: code || null,
+                                xp_earned: xpEarned,
+                            },
+                            {
+                                onConflict: 'user_id,course_id,day,task_id',
+                            }
+                        )
                         .select()
                         .single();
 
@@ -153,31 +203,49 @@ export const useProgressStore = create<ProgressState>()(
                     set((state) => ({
                         completedTasks: [
                             ...state.completedTasks.filter(
-                                t => !(t.course_id === courseId && t.day === day && t.task_id === taskId)
+                                (task) => !(task.course_id === courseId && task.day === day && task.task_id === taskId)
                             ),
                             data as CompletedTask,
                         ],
+                        ownerUserId: userId,
                     }));
+
+                    const authStore = useAuthStore.getState();
+                    if (authStore.user?.id === userId) {
+                        await authStore.addXP(xpEarned);
+                    }
 
                     return xpEarned;
                 } catch (error) {
-                    console.error('Error completing task:', error);
+                    if (!isAbortError(error)) {
+                        console.error('Error completing task:', error);
+                    }
                     return 0;
                 }
             },
 
             updateCurrentDay: async (userId: string, courseId: string, day: number) => {
+                if (!(await hasSession())) {
+                    return;
+                }
+
+                const currentProgress = get().courseProgress[courseId];
+                const nextDay = Math.max(day, currentProgress?.current_day || 1);
+
                 try {
                     const { data, error } = await supabase
                         .from('user_progress')
-                        .upsert({
-                            user_id: userId,
-                            course_id: courseId,
-                            current_day: day,
-                            last_activity: new Date().toISOString(),
-                        }, {
-                            onConflict: 'user_id,course_id'
-                        })
+                        .upsert(
+                            {
+                                user_id: userId,
+                                course_id: courseId,
+                                current_day: nextDay,
+                                last_activity: new Date().toISOString(),
+                            },
+                            {
+                                onConflict: 'user_id,course_id',
+                            }
+                        )
                         .select()
                         .single();
 
@@ -191,18 +259,57 @@ export const useProgressStore = create<ProgressState>()(
                                 ...data,
                             } as UserProgress,
                         },
+                        ownerUserId: userId,
                     }));
                 } catch (error) {
-                    console.error('Error updating current day:', error);
+                    if (!isAbortError(error)) {
+                        console.error('Error updating current day:', error);
+                    }
+                }
+            },
+
+            resetAccountProgress: async () => {
+                if (!(await hasSession())) {
+                    return false;
+                }
+
+                try {
+                    const { error } = await supabase.functions.invoke('reset-user-state', {
+                        body: {},
+                    });
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    set({
+                        ...emptyProgressState,
+                        isLoading: false,
+                        isSyncing: false,
+                    });
+
+                    return true;
+                } catch (error) {
+                    if (!isAbortError(error)) {
+                        console.error('Error resetting account progress:', error);
+                    }
+                    return false;
                 }
             },
 
             syncToSupabase: async () => {
                 set({ isSyncing: true });
-                // Sync logic handled by individual mutations
                 set({
                     isSyncing: false,
-                    lastSync: new Date().toISOString()
+                    lastSync: new Date().toISOString(),
+                });
+            },
+
+            resetProgress: () => {
+                set({
+                    ...emptyProgressState,
+                    isLoading: false,
+                    isSyncing: false,
                 });
             },
         }),
@@ -212,6 +319,7 @@ export const useProgressStore = create<ProgressState>()(
                 courseProgress: state.courseProgress,
                 completedTasks: state.completedTasks,
                 lastSync: state.lastSync,
+                ownerUserId: state.ownerUserId,
             }),
         }
     )

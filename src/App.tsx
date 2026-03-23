@@ -1,89 +1,134 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
 import MobileNotSupported from './pages/MobileNotSupported';
 import Auth from './pages/Auth';
+import { resetAnalyticsUser } from './lib/analytics';
 import { useAuthStore } from './stores/useAuthStore';
+import { useBillingStore } from './stores/useBillingStore';
 import { useProgressStore } from './stores/useProgressStore';
 
-// Lazy load heavy pages for code splitting
 const Home = lazy(() => import('./pages/Home'));
 const Playground = lazy(() => import('./pages/Playground'));
 const Challenges = lazy(() => import('./pages/Challenges'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Lessons = lazy(() => import('./pages/Lessons'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Support = lazy(() => import('./pages/Support'));
 
-// Loading fallback component
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-background">
-    <div className="animate-pulse flex flex-col items-center gap-4">
-      <div className="w-12 h-12 rounded-full bg-primary/20 animate-spin border-2 border-primary border-t-transparent" />
-      <span className="text-muted-foreground">Загрузка...</span>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex animate-pulse flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent bg-primary/20" />
+            <span className="text-muted-foreground">Загрузка...</span>
+        </div>
     </div>
-  </div>
 );
 
-function App() {
-  const { initialize, user, isInitialized } = useAuthStore();
-  const { fetchProgress } = useProgressStore();
-  const [isMobile, setIsMobile] = useState(false);
+function ProtectedRoute() {
+    const { user, isInitialized, isLoading } = useAuthStore();
 
-  // Check if device is mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor;
-      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-        userAgent.toLowerCase()
-      );
-      const isSmallScreen = window.innerWidth < 768;
-      setIsMobile(isMobileDevice || isSmallScreen);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Initialize auth on app load
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
-
-  // Fetch progress when user is authenticated
-  useEffect(() => {
-    if (isInitialized && user?.id) {
-      fetchProgress(user.id);
+    if (!isInitialized || isLoading) {
+        return <PageLoader />;
     }
-  }, [isInitialized, user?.id, fetchProgress]);
 
-  // Show mobile not supported page for mobile devices
-  if (isMobile) {
-    return <MobileNotSupported />;
-  }
+    if (!user) {
+        return <Navigate to="/auth" replace />;
+    }
 
-  return (
-    <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="auth" element={<Auth />} />
-          <Route element={<Layout />}>
-            <Route path="home" element={<Home />} />
-            <Route path="lessons" element={<Lessons />} />
-            <Route path="lessons/:courseId" element={<Lessons />} />
-            <Route path="lessons/:courseId/:dayParam" element={<Lessons />} />
-            <Route path="playground" element={<Playground />} />
-            <Route path="challenges" element={<Challenges />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
-  );
+    return <Outlet />;
+}
+
+function PublicOnlyRoute() {
+    const { user, isInitialized, isLoading } = useAuthStore();
+
+    if (!isInitialized || isLoading) {
+        return <PageLoader />;
+    }
+
+    if (user) {
+        return <Navigate to="/home" replace />;
+    }
+
+    return <Outlet />;
+}
+
+function App() {
+    const { initialize, user, isInitialized } = useAuthStore();
+    const { fetchProgress, resetProgress } = useProgressStore();
+    const { hydrate: hydrateBilling, clear: clearBilling } = useBillingStore();
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            const userAgent = navigator.userAgent || navigator.vendor;
+            const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+                userAgent.toLowerCase()
+            );
+            const isSmallScreen = window.innerWidth < 768;
+            setIsMobile(isMobileDevice || isSmallScreen);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    useEffect(() => {
+        void initialize();
+    }, [initialize]);
+
+    useEffect(() => {
+        if (isInitialized && user?.id) {
+            void fetchProgress(user.id);
+            void hydrateBilling(user.id);
+            return;
+        }
+
+        if (isInitialized && !user) {
+            resetProgress();
+            clearBilling();
+            resetAnalyticsUser();
+        }
+    }, [isInitialized, user, fetchProgress, resetProgress, hydrateBilling, clearBilling]);
+
+    if (isMobile) {
+        return <MobileNotSupported />;
+    }
+
+    return (
+        <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+                <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="pricing" element={<Pricing />} />
+                    <Route path="privacy" element={<Privacy />} />
+                    <Route path="terms" element={<Terms />} />
+                    <Route path="support" element={<Support />} />
+                    <Route element={<PublicOnlyRoute />}>
+                        <Route path="auth" element={<Auth />} />
+                    </Route>
+                    <Route element={<ProtectedRoute />}>
+                        <Route element={<Layout />}>
+                            <Route path="home" element={<Home />} />
+                            <Route path="lessons" element={<Lessons />} />
+                            <Route path="lessons/:courseId" element={<Lessons />} />
+                            <Route path="lessons/:courseId/:dayParam" element={<Lessons />} />
+                            <Route path="playground" element={<Playground />} />
+                            <Route path="challenges" element={<Challenges />} />
+                            <Route path="analytics" element={<Analytics />} />
+                            <Route path="profile" element={<Profile />} />
+                        </Route>
+                    </Route>
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </Suspense>
+        </BrowserRouter>
+    );
 }
 
 export default App;
-

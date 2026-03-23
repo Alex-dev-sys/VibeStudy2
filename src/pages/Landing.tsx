@@ -4,360 +4,380 @@ import {
     Sparkles,
     Code2,
     Brain,
-    Rocket,
     ArrowRight,
     Zap,
     Target,
-    Trophy,
     Terminal,
-    Play
+    Play,
+    ShieldCheck,
+    BookOpen,
 } from 'lucide-react';
 
-const languages = [
-    { name: 'Python', icon: '🐍', color: '#3776ab' },
-    { name: 'JavaScript', icon: '⚡', color: '#f7df1e' },
-    { name: 'Go', icon: '🔷', color: '#00add8' },
-    { name: 'Rust', icon: '🦀', color: '#dea584' },
-    { name: 'Java', icon: '☕', color: '#ed8b00' },
-    { name: 'C++', icon: '⚙️', color: '#00599c' },
-    { name: 'Swift', icon: '🍎', color: '#fa7343' },
+const productSignals = [
+    { value: '3', label: 'стартовых трека' },
+    { value: '30', label: 'дней в каждом треке' },
+    { value: 'AI', label: 'генерация уроков и задач' },
+    { value: 'Web', label: 'редактор и прогресс в браузере' },
+];
+
+const tracks = [
+    { name: 'Python', accent: '#3776ab' },
+    { name: 'JavaScript', accent: '#f7df1e' },
+    { name: 'Go', accent: '#00add8' },
 ];
 
 const features = [
     {
         icon: Brain,
-        title: 'ИИ-Ассистент',
-        description: 'Твой личный репетитор, доступный 24/7. Адаптируется под твой стиль обучения с персональными примерами и объяснениями.',
+        title: 'AI-уроки без хаоса',
+        description:
+            'Урок генерируется под конкретную тему дня, а не как бесконечный чат. Это помогает держать структуру и двигаться по треку последовательно.',
     },
     {
         icon: Terminal,
-        title: 'Браузерная IDE',
-        description: 'Начинай кодить мгновенно без настройки. Мощная облачная IDE с умным автодополнением.',
+        title: 'Практика прямо в браузере',
+        description:
+            'Не нужно поднимать окружение, чтобы начать. Теория, задачи и код находятся в одном потоке, без переключения между пятью сервисами.',
     },
     {
         icon: Target,
-        title: 'Карьерные треки',
-        description: 'Следуй структурированным планам обучения от экспертов индустрии, чтобы стать готовым к работе.',
+        title: 'Честный прогресс',
+        description:
+            'Аккаунт показывает только реальные XP, streak и завершённые уроки. Если ты новый пользователь, продукт не притворяется, что у тебя уже есть достижения.',
     },
     {
-        icon: Trophy,
-        title: 'Ежедневные задачи',
-        description: 'Выработай привычку кодить с помощью геймифицированных задач. Зарабатывай стрики, бейджи и поднимайся в рейтинге.',
+        icon: ShieldCheck,
+        title: 'Backend-first логика',
+        description:
+            'Генерация уроков и критичные сценарии вынесены на серверную сторону. Это делает продукт ближе к реальному коммерческому запуску, а не к простой демке.',
     },
 ];
 
-const stats = [
-    { value: '10M+', label: 'Активных учеников' },
-    { value: '50+', label: 'Языков и фреймворков' },
-    { value: '98%', label: 'Уровень удовлетворенности' },
-    { value: '500K+', label: 'Завершенных задач' },
+const dailyFlow = [
+    'Выбери трек и цель обучения.',
+    'Открой урок дня и получи AI-теорию.',
+    'Реши задачу в браузере и сохрани прогресс.',
+    'Вернись завтра и продолжи streak.',
 ];
 
 export default function Landing() {
     return (
         <div className="relative min-h-screen overflow-hidden">
-            {/* Animated background gradient */}
-            <div className="fixed inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900" />
-            <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-vibe-900/20 via-transparent to-transparent" />
+            <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.2),_transparent_30%),linear-gradient(180deg,#0b1120_0%,#111827_45%,#0b1120_100%)]" />
 
-            {/* Floating orbs - using CSS animation for performance */}
-            <div className="fixed top-20 left-20 w-96 h-96 bg-vibe-600/10 rounded-full blur-3xl floating-orb floating-orb-1" />
-            <div className="fixed bottom-20 right-20 w-80 h-80 bg-vibe-500/10 rounded-full blur-3xl floating-orb floating-orb-2" />
+            <div className="fixed left-12 top-24 h-80 w-80 rounded-full bg-vibe-600/10 blur-3xl" />
+            <div className="fixed bottom-10 right-10 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
 
-            {/* Content */}
             <div className="relative z-10">
-                {/* Navigation */}
-                <nav className="max-w-7xl mx-auto px-6 py-6">
-                    <div className="flex items-center justify-between">
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="flex items-center gap-2"
-                        >
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vibe-500 to-vibe-700 flex items-center justify-center shadow-neon">
-                                <Code2 className="w-6 h-6 text-white" />
-                            </div>
-                            <span className="text-2xl font-bold text-white">VibeStudy</span>
-                        </motion.div>
+                <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-3"
+                    >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-vibe-500 to-vibe-700 shadow-neon">
+                            <Code2 className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <span className="block text-xl font-bold text-white">VibeStudy</span>
+                            <span className="block text-xs text-gray-500">AI daily coding coach</span>
+                        </div>
+                    </motion.div>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="hidden md:flex items-center gap-8"
-                        >
-                            <a href="#features" className="text-gray-400 hover:text-white transition-colors">Возможности</a>
-                            <a href="#languages" className="text-gray-400 hover:text-white transition-colors">Языки</a>
-                            <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">Цены</a>
-                            <Link to="/auth" className="btn-neon px-6 py-2">
-                                Начать обучение
-                            </Link>
-                        </motion.div>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="hidden items-center gap-8 md:flex"
+                    >
+                        <a href="#how-it-works" className="text-gray-400 transition-colors hover:text-white">
+                            Как это работает
+                        </a>
+                        <a href="#tracks" className="text-gray-400 transition-colors hover:text-white">
+                            Треки
+                        </a>
+                        <a href="#product" className="text-gray-400 transition-colors hover:text-white">
+                            Что внутри
+                        </a>
+                        <Link to="/pricing" className="text-gray-400 transition-colors hover:text-white">
+                            Pricing
+                        </Link>
+                        <Link to="/auth" className="btn-neon px-6 py-2">
+                            Войти
+                        </Link>
+                    </motion.div>
                 </nav>
 
-                {/* Hero Section */}
-                <section className="max-w-7xl mx-auto px-6 pt-20 pb-32">
-                    <div className="text-center max-w-4xl mx-auto">
-                        {/* Badge */}
+                <section className="mx-auto max-w-7xl px-6 pb-24 pt-20">
+                    <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]">
+                        <div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5 }}
+                                className="mb-6 inline-flex items-center gap-2 rounded-full border border-vibe-500/30 bg-vibe-500/10 px-5 py-2.5"
+                            >
+                                <Sparkles className="h-4 w-4 text-vibe-300" />
+                                <span className="text-sm font-medium text-vibe-200">
+                                    Продукт для ежедневного входа в программирование
+                                </span>
+                            </motion.div>
+
+                            <motion.h1
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.1 }}
+                                className="mb-6 text-5xl font-bold leading-tight text-white md:text-7xl"
+                            >
+                                Изучай код
+                                <span className="text-gradient"> каждый день</span>,
+                                <br />
+                                а не рывками
+                            </motion.h1>
+
+                            <motion.p
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.2 }}
+                                className="mb-10 max-w-2xl text-lg leading-relaxed text-gray-300"
+                            >
+                                VibeStudy ведёт тебя по треку, генерирует урок под тему дня, даёт задачи и сохраняет
+                                прогресс. Без фейковых достижений, без пустых обещаний и без необходимости настраивать
+                                окружение перед первым шагом.
+                            </motion.p>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.3 }}
+                                className="flex flex-col items-start gap-4 sm:flex-row"
+                            >
+                                <Link to="/auth">
+                                    <motion.div
+                                        className="btn-neon flex items-center gap-3 rounded-xl px-8 py-4 text-lg"
+                                        whileHover={{ scale: 1.04 }}
+                                        whileTap={{ scale: 0.96 }}
+                                    >
+                                        <Zap className="h-5 w-5" />
+                                        Начать бесплатно
+                                        <ArrowRight className="h-5 w-5" />
+                                    </motion.div>
+                                </Link>
+
+                                <a href="#how-it-works">
+                                    <motion.div
+                                        className="btn-neon-outline flex items-center gap-3 rounded-xl px-8 py-4 text-lg"
+                                        whileHover={{ scale: 1.04 }}
+                                        whileTap={{ scale: 0.96 }}
+                                    >
+                                        <Play className="h-5 w-5" />
+                                        Посмотреть сценарий
+                                    </motion.div>
+                                </a>
+                            </motion.div>
+                        </div>
+
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass mb-8 border border-vibe-500/30"
-                        >
-                            <Sparkles className="w-4 h-4 text-vibe-400" />
-                            <span className="text-sm font-medium text-vibe-300">IT-образование с ИИ</span>
-                        </motion.div>
-
-                        {/* Main Heading */}
-                        <motion.h1
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="text-6xl md:text-8xl font-bold mb-6 leading-tight"
-                        >
-                            <span className="text-white">Vibe</span>
-                            <span className="text-gradient">Study</span>
-                            <br />
-                            <span className="text-4xl md:text-5xl text-gray-300 font-medium">
-                                Твой путь в IT с искусственным интеллектом
-                            </span>
-                        </motion.h1>
-
-                        {/* Subheading */}
-                        <motion.p
-                            initial={{ opacity: 0, y: 30 }}
+                            initial={{ opacity: 0, y: 24 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.2 }}
-                            className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed"
+                            className="glass rounded-[2rem] border border-vibe-500/20 p-6"
                         >
-                            Освой программирование в 10 раз быстрее с персональным ИИ-учебным планом,
-                            анализом кода в реальном времени и сообществом будущих лидеров технологий.
-                        </motion.p>
+                            <div className="mb-5 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-500">Сегодняшний цикл</p>
+                                    <h2 className="text-xl font-bold text-white">От входа до первой задачи</h2>
+                                </div>
+                                <BookOpen className="h-6 w-6 text-vibe-300" />
+                            </div>
 
-                        {/* CTA Buttons */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
-                            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-                        >
-                            <Link to="/auth">
-                                <motion.button
-                                    className="btn-neon flex items-center gap-3 text-lg px-10 py-4 rounded-xl"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    <Rocket className="w-5 h-5" />
-                                    Начать бесплатно
-                                    <ArrowRight className="w-5 h-5" />
-                                </motion.button>
-                            </Link>
-                            <Link to="/playground">
-                                <motion.button
-                                    className="btn-neon-outline flex items-center gap-3 text-lg px-10 py-4 rounded-xl"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    <Play className="w-5 h-5" />
-                                    Попробовать песочницу
-                                </motion.button>
-                            </Link>
+                            <div className="space-y-3">
+                                {dailyFlow.map((step, index) => (
+                                    <div
+                                        key={step}
+                                        className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
+                                    >
+                                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-vibe-500/20 text-sm font-semibold text-vibe-200">
+                                            {index + 1}
+                                        </div>
+                                        <p className="text-sm leading-relaxed text-gray-200">{step}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-5 rounded-2xl border border-emerald-400/15 bg-emerald-500/10 px-4 py-4">
+                                <p className="text-sm text-emerald-200">
+                                    Запуск сейчас честный: сначала пользователь получает value, а уже потом упирается в
+                                    ограничения или подписку.
+                                </p>
+                            </div>
                         </motion.div>
                     </div>
                 </section>
 
-                {/* Stats Section */}
-                <section className="max-w-7xl mx-auto px-6 pb-20">
+                <section className="mx-auto max-w-7xl px-6 pb-20">
                     <motion.div
-                        initial={{ opacity: 0, y: 40 }}
+                        initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="grid grid-cols-2 md:grid-cols-4 gap-6"
+                        className="grid grid-cols-2 gap-4 md:grid-cols-4"
                     >
-                        {stats.map((stat, index) => (
+                        {productSignals.map((signal, index) => (
                             <motion.div
-                                key={stat.label}
+                                key={signal.label}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ delay: index * 0.1 }}
-                                className="glass-hover p-6 text-center"
+                                transition={{ delay: index * 0.05 }}
+                                className="glass-hover rounded-[1.75rem] p-6 text-center"
                             >
-                                <div className="text-4xl font-bold text-gradient mb-2">{stat.value}</div>
-                                <div className="text-gray-400 text-sm">{stat.label}</div>
+                                <div className="mb-2 text-4xl font-bold text-gradient">{signal.value}</div>
+                                <div className="text-sm text-gray-400">{signal.label}</div>
                             </motion.div>
                         ))}
                     </motion.div>
                 </section>
 
-                {/* Languages Section */}
-                <section id="languages" className="max-w-7xl mx-auto px-6 py-20">
+                <section id="tracks" className="mx-auto max-w-7xl px-6 py-20">
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
-                        className="text-center mb-12"
+                        className="mb-12 text-center"
                     >
-                        <h2 className="text-4xl font-bold text-white mb-4">
-                            Освой 7+ языков программирования
-                        </h2>
-                        <p className="text-gray-400 text-lg">
-                            От новичка до эксперта, в своем темпе
+                        <h2 className="mb-4 text-4xl font-bold text-white">Стартовые треки</h2>
+                        <p className="mx-auto max-w-2xl text-lg text-gray-400">
+                            На первом запуске продукт сфокусирован на трёх треках. Это лучше, чем распыляться на
+                            десятки языков и не доводить ни один до качества.
                         </p>
                     </motion.div>
 
-                    <div className="flex flex-wrap justify-center gap-4">
-                        {languages.map((lang, index) => (
-                            <Link to={`/challenges?lang=${lang.name}`} key={lang.name}>
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    whileInView={{ opacity: 1, scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: index * 0.1 }}
-                                    whileHover={{ scale: 1.1, y: -5 }}
-                                    className="glass-hover px-8 py-5 flex items-center gap-4 cursor-pointer group"
-                                >
-                                    <span className="text-3xl group-hover:scale-110 transition-transform">{lang.icon}</span>
-                                    <span className="font-semibold text-white text-lg">{lang.name}</span>
-                                </motion.div>
-                            </Link>
+                    <div className="grid gap-6 md:grid-cols-3">
+                        {tracks.map((track, index) => (
+                            <motion.div
+                                key={track.name}
+                                initial={{ opacity: 0, y: 24 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.08 }}
+                                className="glass-hover rounded-[2rem] p-6"
+                            >
+                                <div
+                                    className="mb-5 h-3 rounded-full"
+                                    style={{ background: `linear-gradient(90deg, ${track.accent} 0%, rgba(255,255,255,0.12) 100%)` }}
+                                />
+                                <h3 className="mb-2 text-2xl font-bold text-white">{track.name}</h3>
+                                <p className="text-gray-400">
+                                    Трек рассчитан на ежедневный темп и короткий прогресс-цикл: урок, задача,
+                                    сохранённый результат.
+                                </p>
+                            </motion.div>
                         ))}
                     </div>
                 </section>
 
-                {/* Features Section */}
-                <section id="features" className="max-w-7xl mx-auto px-6 py-20">
+                <section id="product" className="mx-auto max-w-7xl px-6 py-20">
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
-                        className="text-center mb-16"
+                        className="mb-14 text-center"
                     >
-                        <h2 className="text-4xl font-bold text-white mb-4">
-                            Почувствуй будущее программирования
-                        </h2>
-                        <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                            Наша платформа объединяет передовой ИИ с проверенными методиками обучения
-                            для ускорения твоего карьерного роста.
+                        <h2 className="mb-4 text-4xl font-bold text-white">Что уже есть внутри</h2>
+                        <p className="mx-auto max-w-2xl text-lg text-gray-400">
+                            Эта посадочная страница больше не обещает “10 миллионов пользователей” и “идеальный AI”.
+                            Она показывает то, что реально есть в продукте сейчас и что действительно можно монетизировать.
                         </p>
                     </motion.div>
 
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="grid gap-8 md:grid-cols-2">
                         {features.map((feature, index) => {
                             const Icon = feature.icon;
+
                             return (
                                 <motion.div
                                     key={feature.title}
-                                    initial={{ opacity: 0, y: 30 }}
+                                    initial={{ opacity: 0, y: 24 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className="glass-hover p-8 card-hover group"
+                                    transition={{ delay: index * 0.08 }}
+                                    className="glass-hover rounded-[2rem] p-8"
                                 >
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-vibe-500 to-vibe-700 flex items-center justify-center mb-6 shadow-neon group-hover:shadow-neon-lg transition-shadow">
-                                        <Icon className="w-8 h-8 text-white" />
+                                    <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-vibe-500 to-vibe-700 shadow-neon">
+                                        <Icon className="h-7 w-7 text-white" />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-white mb-3">
-                                        {feature.title}
-                                    </h3>
-                                    <p className="text-gray-400 leading-relaxed text-lg">
-                                        {feature.description}
-                                    </p>
+                                    <h3 className="mb-3 text-2xl font-bold text-white">{feature.title}</h3>
+                                    <p className="text-lg leading-relaxed text-gray-400">{feature.description}</p>
                                 </motion.div>
                             );
                         })}
                     </div>
                 </section>
 
-                {/* CTA Section */}
-                <section className="max-w-7xl mx-auto px-6 py-20">
+                <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-20">
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.96 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="glass p-16 text-center relative overflow-hidden rounded-3xl border border-vibe-500/20"
+                        className="glass relative overflow-hidden rounded-[2rem] border border-vibe-500/20 p-12 text-center"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-vibe-600/10 to-transparent" />
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-vibe-500 to-transparent" />
-
                         <div className="relative z-10">
-                            <div
-                                className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-vibe-500 to-vibe-700 flex items-center justify-center shadow-neon-lg animate-spin"
-                                style={{ animationDuration: '20s' }}
-                            >
-                                <Zap className="w-10 h-10 text-white" />
-                            </div>
-                            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                                Готов кодить?
-                            </h2>
-                            <p className="text-gray-400 mb-10 max-w-xl mx-auto text-lg">
-                                Присоединяйся к тысячам разработчиков, создающих будущее.
-                                Начни бесплатное пробное занятие сегодня и открой силу обучения с ИИ.
+                            <h2 className="mb-4 text-4xl font-bold text-white">Готов попробовать продукт как пользователь?</h2>
+                            <p className="mx-auto mb-8 max-w-2xl text-lg text-gray-400">
+                                На текущем этапе лучший сценарий не “смотреть маркетинг”, а зайти, выбрать трек и пройти
+                                первый честный цикл обучения.
                             </p>
                             <Link to="/auth">
-                                <motion.button
-                                    className="btn-neon text-xl px-12 py-5 rounded-xl"
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                <motion.div
+                                    className="btn-neon inline-flex items-center gap-3 rounded-xl px-10 py-5 text-lg"
+                                    whileHover={{ scale: 1.04 }}
+                                    whileTap={{ scale: 0.96 }}
                                 >
-                                    Начать — Это бесплатно
-                                </motion.button>
+                                    Войти и начать первый урок
+                                    <ArrowRight className="h-5 w-5" />
+                                </motion.div>
                             </Link>
-                            <p className="text-gray-500 mt-4 text-sm">Кредитная карта не требуется</p>
                         </div>
                     </motion.div>
                 </section>
 
-                {/* Footer */}
-                <footer className="max-w-7xl mx-auto px-6 py-12 border-t border-white/5">
-                    <div className="grid md:grid-cols-4 gap-8 mb-8">
+                <footer className="mx-auto max-w-7xl border-t border-white/5 px-6 py-10">
+                    <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-vibe-500 to-vibe-700 flex items-center justify-center">
-                                    <Code2 className="w-4 h-4 text-white" />
+                            <div className="mb-3 flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-vibe-500 to-vibe-700">
+                                    <Code2 className="h-4 w-4 text-white" />
                                 </div>
-                                <span className="text-xl font-bold text-white">VibeStudy</span>
+                                <span className="text-lg font-bold text-white">VibeStudy</span>
                             </div>
-                            <p className="text-gray-500 text-sm">
-                                Расширяем возможности нового поколения разработчиков с помощью ИИ-инструментов.
+                            <p className="max-w-md text-sm text-gray-500">
+                                AI daily coding coach с честным прогрессом, browser practice и фокусом на платный
+                                soft launch, а не на красивые, но пустые обещания.
                             </p>
                         </div>
 
-                        <div>
-                            <h4 className="text-white font-semibold mb-4">Платформа</h4>
-                            <ul className="space-y-2 text-gray-500 text-sm">
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Курсы</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Практика</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Цены</a></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="text-white font-semibold mb-4">Ресурсы</h4>
-                            <ul className="space-y-2 text-gray-500 text-sm">
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Блог</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Шпаргалки</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Сообщество</a></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="text-white font-semibold mb-4">Компания</h4>
-                            <ul className="space-y-2 text-gray-500 text-sm">
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">О нас</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Карьера</a></li>
-                                <li><a href="#" className="hover:text-vibe-400 transition-colors">Контакты</a></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/5">
-                        <p className="text-gray-600 text-sm">© 2025 VibeStudy Inc. Все права защищены.</p>
-                        <div className="flex gap-4 mt-4 md:mt-0">
-                            <a href="#" className="text-gray-500 hover:text-vibe-400 transition-colors">Twitter</a>
-                            <a href="#" className="text-gray-500 hover:text-vibe-400 transition-colors">GitHub</a>
-                            <a href="#" className="text-gray-500 hover:text-vibe-400 transition-colors">Discord</a>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                            <Link to="/pricing" className="transition-colors hover:text-vibe-300">
+                                Pricing
+                            </Link>
+                            <Link to="/privacy" className="transition-colors hover:text-vibe-300">
+                                Privacy
+                            </Link>
+                            <Link to="/terms" className="transition-colors hover:text-vibe-300">
+                                Terms
+                            </Link>
+                            <Link to="/support" className="transition-colors hover:text-vibe-300">
+                                Support
+                            </Link>
+                            <a href="#product" className="transition-colors hover:text-vibe-300">
+                                Продукт
+                            </a>
+                            <a href="#tracks" className="transition-colors hover:text-vibe-300">
+                                Треки
+                            </a>
+                            <a href="#how-it-works" className="transition-colors hover:text-vibe-300">
+                                Сценарий
+                            </a>
                         </div>
                     </div>
                 </footer>

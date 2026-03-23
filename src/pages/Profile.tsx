@@ -1,343 +1,549 @@
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-    Trophy,
-    Flame,
-    Zap,
-    Star,
-    Award,
-    Target,
+    AlertTriangle,
+    BookOpen,
     Calendar,
-    Settings,
-    Bell,
-    Moon,
-    Shield,
+    CheckCircle2,
     ChevronRight,
-    Edit3,
-    Github,
-    Twitter,
-    Globe
+    Flame,
+    RotateCcw,
+    Sparkles,
+    Target,
+    Trophy,
+    Wallet,
+    Zap,
 } from 'lucide-react';
+import { courses } from '../data/courses';
+import { MANUAL_PAYMENT_NETWORK_LABEL, MANUAL_PAYMENT_WALLET_ADDRESS } from '../lib/billing';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useBillingStore } from '../stores/useBillingStore';
+import { useProgressStore } from '../stores/useProgressStore';
 
-const userData = {
-    name: 'Alex Dev',
-    username: '@alex_dev',
-    avatar: '👨‍💻',
-    rank: 'Senior Architect',
-    joinDate: 'January 2024',
-    bio: 'Full-stack developer passionate about AI and clean code',
-    stats: {
-        xp: 12450,
-        streak: 14,
-        challenges: 47,
-        globalRank: 1247,
+const courseMeta: Record<string, { accent: string; summary: string }> = {
+    python: {
+        accent: 'from-sky-500 to-cyan-400',
+        summary: 'Good for automation, backend fundamentals, and a strong first track.',
+    },
+    javascript: {
+        accent: 'from-amber-400 to-orange-500',
+        summary: 'Best entry point if your main goal is web and interfaces.',
+    },
+    go: {
+        accent: 'from-cyan-500 to-teal-400',
+        summary: 'A good path for performant services and backend work.',
+    },
+    csharp: {
+        accent: 'from-fuchsia-500 to-violet-500',
+        summary: 'Fits .NET development and practical app-building.',
     },
 };
 
-const achievements = [
-    { icon: '🏆', name: 'Speed Demon', desc: 'Solved 5 in 1 hour', rarity: 'gold' },
-    { icon: '🔥', name: '2-Week Streak', desc: '14 days coding', rarity: 'gold' },
-    { icon: '⭐', name: 'Python Master', desc: 'Completed track', rarity: 'gold' },
-    { icon: '🎯', name: 'Perfect Score', desc: '100% on 10 tests', rarity: 'silver' },
-    { icon: '🚀', name: 'Early Bird', desc: 'Code before 6 AM', rarity: 'silver' },
-    { icon: '💡', name: 'Problem Solver', desc: '100 challenges', rarity: 'bronze' },
-    { icon: '🤝', name: 'Helpful Hero', desc: 'Helped 50 users', rarity: 'bronze' },
-    { icon: '📚', name: 'Knowledge Seeker', desc: '20 lessons/week', rarity: 'bronze' },
-];
-
-const languageSkills = [
-    { name: 'Python', level: 85, icon: '🐍' },
-    { name: 'JavaScript', level: 72, icon: '⚡' },
-    { name: 'Go', level: 45, icon: '🔷' },
-    { name: 'Rust', level: 30, icon: '🦀' },
-    { name: 'Java', level: 55, icon: '☕' },
-];
-
-const activityData = Array.from({ length: 52 }, () =>
-    Array.from({ length: 7 }, () => Math.floor(Math.random() * 5))
-);
-
-const getRarityStyles = (rarity: string) => {
-    switch (rarity) {
-        case 'gold': return 'bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border-yellow-500/30';
-        case 'silver': return 'bg-gradient-to-br from-gray-300/20 to-gray-500/20 border-gray-400/30';
-        case 'bronze': return 'bg-gradient-to-br from-orange-300/20 to-orange-600/20 border-orange-500/30';
-        default: return 'bg-dark-700';
+function formatJoinDate(value: string | null | undefined) {
+    if (!value) {
+        return 'Recently';
     }
-};
+
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+    }).format(new Date(value));
+}
+
+function getInitials(fullName: string | null | undefined) {
+    if (!fullName) {
+        return 'VS';
+    }
+
+    const initials = fullName
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() ?? '')
+        .join('');
+
+    return initials || 'VS';
+}
 
 export default function Profile() {
+    const { user, profile, fetchProfile } = useAuthStore();
+    const { access, entitlements, subscription, paymentRequests, error: billingError } = useBillingStore();
+    const { courseProgress, completedTasks, resetAccountProgress } = useProgressStore();
+    const [isResetting, setIsResetting] = useState(false);
+    const [confirmReset, setConfirmReset] = useState(false);
+    const [resetMessage, setResetMessage] = useState<string | null>(null);
+
+    const totalXp = profile?.total_xp ?? 0;
+    const streak = profile?.current_streak ?? 0;
+    const level = profile?.level ?? 1;
+    const completedLessons = Object.values(courseProgress).reduce(
+        (sum, progress) => sum + progress.completed_days.length,
+        0
+    );
+    const activeTracks = Object.keys(courseProgress).length;
+    const hasAnyProgress =
+        totalXp > 0 || streak > 0 || completedLessons > 0 || completedTasks.length > 0 || activeTracks > 0;
+    const isPro = access.canAccessPaidFeatures;
+    const latestPaymentRequest = paymentRequests[0] ?? null;
+
+    const trackRows = useMemo(() => {
+        return courses
+            .filter((course) => courseMeta[course.id])
+            .map((course) => {
+                const progress = courseProgress[course.id];
+                const completedCount = progress?.completed_days.length ?? 0;
+                const currentDay = Math.min(progress?.current_day ?? 1, course.totalDays);
+                const progressPercent = Math.round((completedCount / course.totalDays) * 100);
+                const taskCount = completedTasks.filter((task) => task.course_id === course.id).length;
+
+                return {
+                    id: course.id,
+                    name: course.name,
+                    currentDay,
+                    completedCount,
+                    progressPercent,
+                    taskCount,
+                    totalDays: course.totalDays,
+                    href: progress ? `/lessons/${course.id}/${currentDay}` : `/lessons/${course.id}`,
+                    started: Boolean(progress),
+                    accent: courseMeta[course.id].accent,
+                    summary: courseMeta[course.id].summary,
+                };
+            })
+            .slice(0, 4);
+    }, [completedTasks, courseProgress]);
+
+    const handleReset = async () => {
+        if (!confirmReset) {
+            setConfirmReset(true);
+            setResetMessage('Click once more to confirm the full reset of account progress.');
+            return;
+        }
+
+        setIsResetting(true);
+        setResetMessage(null);
+
+        const success = await resetAccountProgress();
+
+        if (success) {
+            await fetchProfile();
+            setResetMessage('Account progress was reset. Home and profile now reflect the empty state.');
+            setConfirmReset(false);
+        } else {
+            setResetMessage('Could not reset progress. Check the connection and try again.');
+        }
+
+        setIsResetting(false);
+    };
+
     return (
-        <div className="min-h-screen relative">
-            <div className="fixed inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900 -z-10" />
+        <div className="relative min-h-screen">
+            <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.18),_transparent_30%),linear-gradient(180deg,#0b1120_0%,#111827_45%,#0b1120_100%)]" />
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Profile Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+            <div className="mx-auto max-w-7xl px-6 py-8">
+                <motion.section
+                    initial={{ opacity: 0, y: -16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass p-8 mb-8 relative overflow-hidden"
+                    className="glass relative mb-8 overflow-hidden rounded-[2rem] p-8"
                 >
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-vibe-500/10 rounded-full blur-3xl" />
+                    <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-vibe-500/15 blur-3xl" />
 
-                    <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
-                        {/* Avatar */}
-                        <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            className="relative"
-                        >
-                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-vibe-500 to-vibe-700 flex items-center justify-center text-6xl shadow-neon-lg ring-4 ring-vibe-500/30">
-                                {userData.avatar}
+                    <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+                            <div className="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-gradient-to-br from-vibe-500 to-vibe-700 text-3xl font-bold text-white shadow-neon">
+                                {getInitials(profile?.full_name)}
                             </div>
-                            <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-vibe-500 flex items-center justify-center shadow-lg"
-                            >
-                                <Edit3 className="w-4 h-4 text-white" />
-                            </motion.button>
-                        </motion.div>
 
-                        {/* Info */}
-                        <div className="flex-1 text-center md:text-left">
-                            <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
-                                <h1 className="text-3xl font-bold text-white">{userData.name}</h1>
-                                <span className="px-4 py-1 rounded-full bg-gradient-to-r from-vibe-500 to-vibe-600 text-white text-sm font-medium">
-                                    {userData.rank}
-                                </span>
-                            </div>
-                            <p className="text-gray-400 mb-2">{userData.username}</p>
-                            <p className="text-gray-300 mb-4 max-w-lg">{userData.bio}</p>
-                            <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-400">
-                                <span className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    Joined {userData.joinDate}
-                                </span>
-                                <a href="#" className="flex items-center gap-1 hover:text-vibe-400">
-                                    <Github className="w-4 h-4" />
-                                    GitHub
-                                </a>
-                                <a href="#" className="flex items-center gap-1 hover:text-vibe-400">
-                                    <Twitter className="w-4 h-4" />
-                                    Twitter
-                                </a>
-                                <a href="#" className="flex items-center gap-1 hover:text-vibe-400">
-                                    <Globe className="w-4 h-4" />
-                                    Portfolio
-                                </a>
+                            <div>
+                                <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-vibe-400/20 bg-vibe-500/10 px-3 py-1 text-sm text-vibe-200">
+                                    <Sparkles className="h-4 w-4" />
+                                    Profile uses real account data only
+                                </p>
+                                <h1 className="text-3xl font-bold text-white">
+                                    {profile?.full_name || user?.email || 'VibeStudy account'}
+                                </h1>
+                                <p className="mt-2 text-gray-300">
+                                    Level {level} • {user?.email || 'email not found'}
+                                </p>
+                                <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-400">
+                                    <span className="inline-flex items-center gap-1">
+                                        <Calendar className="h-4 w-4" />
+                                        Joined {formatJoinDate(profile?.created_at)}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1">
+                                        <Target className="h-4 w-4" />
+                                        {activeTracks} active tracks
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Edit Button */}
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="btn-neon-outline px-6 py-2 hidden md:flex items-center gap-2"
-                        >
-                            <Settings className="w-4 h-4" />
-                            Edit Profile
-                        </motion.button>
+                        <Link to="/lessons">
+                            <motion.div
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="btn-neon inline-flex items-center gap-2 px-5 py-3"
+                            >
+                                <BookOpen className="h-4 w-4" />
+                                Open lessons
+                            </motion.div>
+                        </Link>
                     </div>
-                </motion.div>
+                </motion.section>
 
-                {/* Stats Row */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                <motion.section
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+                    transition={{ delay: 0.05 }}
+                    className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4"
                 >
                     {[
-                        { icon: Zap, label: 'Total XP', value: userData.stats.xp.toLocaleString(), color: 'from-yellow-400 to-orange-500' },
-                        { icon: Flame, label: 'Day Streak', value: userData.stats.streak, color: 'from-orange-500 to-red-500' },
-                        { icon: Target, label: 'Challenges', value: userData.stats.challenges, color: 'from-green-400 to-emerald-500' },
-                        { icon: Trophy, label: 'Global Rank', value: `#${userData.stats.globalRank}`, color: 'from-vibe-400 to-vibe-600' },
+                        {
+                            icon: Zap,
+                            label: 'Total XP',
+                            value: totalXp.toLocaleString('en-US'),
+                            detail: `${Math.max(0, level * 1000 - totalXp)} XP to next level`,
+                            accent: 'from-yellow-400 to-orange-500',
+                        },
+                        {
+                            icon: Flame,
+                            label: 'Streak',
+                            value: `${streak}`,
+                            detail: streak > 0 ? 'days in a row' : 'not started yet',
+                            accent: 'from-orange-500 to-rose-500',
+                        },
+                        {
+                            icon: CheckCircle2,
+                            label: 'Lessons done',
+                            value: `${completedLessons}`,
+                            detail: `${completedTasks.length} tasks solved`,
+                            accent: 'from-emerald-400 to-green-500',
+                        },
+                        {
+                            icon: Trophy,
+                            label: 'Tracks started',
+                            value: `${activeTracks}`,
+                            detail: hasAnyProgress ? 'saved to the account' : 'new account',
+                            accent: 'from-vibe-400 to-vibe-600',
+                        },
                     ].map((stat, index) => (
                         <motion.div
                             key={stat.label}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 18 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 + index * 0.05 }}
                             whileHover={{ y: -4 }}
-                            className="glass-hover p-6 text-center"
+                            className="glass-hover rounded-[1.75rem] p-5"
                         >
-                            <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-                                <stat.icon className="w-6 h-6 text-white" />
+                            <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${stat.accent}`}>
+                                <stat.icon className="h-6 w-6 text-white" />
                             </div>
-                            <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
                             <p className="text-sm text-gray-400">{stat.label}</p>
+                            <p className="mt-1 text-3xl font-bold text-white">{stat.value}</p>
+                            <p className="mt-1 text-xs text-vibe-300">{stat.detail}</p>
                         </motion.div>
                     ))}
-                </motion.div>
+                </motion.section>
 
-                <div className="grid lg:grid-cols-3 gap-6">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Achievements */}
-                        <motion.div
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="space-y-6 lg:col-span-2">
+                        <motion.section
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="glass p-6"
+                            className="glass rounded-[2rem] p-6"
                         >
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <Award className="w-5 h-5 text-vibe-400" />
-                                    Achievements
-                                </h2>
-                                <span className="text-sm text-gray-400">{achievements.length} badges</span>
+                            <div className="mb-6 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-bold text-white">Your tracks</h2>
+                                    <p className="text-sm text-gray-400">
+                                        No fake badges and no invented activity. This page shows only what is really in the account.
+                                    </p>
+                                </div>
+                                <Link
+                                    to="/lessons"
+                                    className="inline-flex items-center gap-1 text-sm text-vibe-300 transition-colors hover:text-vibe-200"
+                                >
+                                    Open all <ChevronRight className="h-4 w-4" />
+                                </Link>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {achievements.map((badge, index) => (
+
+                            <div className="space-y-4">
+                                {trackRows.map((track, index) => (
                                     <motion.div
-                                        key={badge.name}
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.3 + index * 0.05 }}
-                                        whileHover={{ scale: 1.05 }}
-                                        className={`p-4 rounded-xl border text-center ${getRarityStyles(badge.rarity)}`}
+                                        key={track.id}
+                                        initial={{ opacity: 0, y: 18 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.25 + index * 0.05 }}
+                                        className="rounded-[1.5rem] border border-white/10 bg-dark-800/60 p-5"
                                     >
-                                        <span className="text-3xl block mb-2">{badge.icon}</span>
-                                        <p className="text-sm font-medium text-white">{badge.name}</p>
-                                        <p className="text-xs text-gray-500">{badge.desc}</p>
+                                        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div>
+                                                <div className={`mb-2 inline-flex rounded-full bg-gradient-to-r ${track.accent} px-3 py-1 text-sm font-semibold text-white`}>
+                                                    {track.name}
+                                                </div>
+                                                <p className="text-sm text-gray-300">{track.summary}</p>
+                                            </div>
+                                            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-gray-300">
+                                                {track.started ? `${track.progressPercent}%` : 'Not started'}
+                                            </span>
+                                        </div>
+
+                                        <div className="mb-3 flex items-center justify-between text-sm">
+                                            <span className="text-gray-400">
+                                                {track.started ? `Current day ${track.currentDay}` : 'Ready to start from day 1'}
+                                            </span>
+                                            <span className="text-white">
+                                                {track.completedCount}/{track.totalDays} lessons
+                                            </span>
+                                        </div>
+
+                                        <div className="mb-4 h-2 overflow-hidden rounded-full bg-dark-700">
+                                            <div
+                                                className={`h-full rounded-full bg-gradient-to-r ${track.accent}`}
+                                                style={{ width: `${track.progressPercent}%` }}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-vibe-300">{track.taskCount} tasks saved</span>
+                                            <Link
+                                                to={track.href}
+                                                className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors hover:text-vibe-200"
+                                            >
+                                                {track.started ? 'Continue' : 'Start'}
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Link>
+                                        </div>
                                     </motion.div>
                                 ))}
                             </div>
-                        </motion.div>
+                        </motion.section>
 
-                        {/* Activity Heatmap */}
-                        <motion.div
+                        <motion.section
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
-                            className="glass p-6"
+                            className="glass rounded-[2rem] p-6"
                         >
-                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-vibe-400" />
-                                Contribution Activity
-                            </h2>
-                            <div className="overflow-x-auto">
-                                <div className="flex gap-1 min-w-max">
-                                    {activityData.map((week, weekIndex) => (
-                                        <div key={weekIndex} className="flex flex-col gap-1">
-                                            {week.map((day, dayIndex) => (
-                                                <motion.div
-                                                    key={dayIndex}
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    transition={{ delay: 0.5 + weekIndex * 0.01 }}
-                                                    className="w-3 h-3 rounded-sm"
-                                                    style={{
-                                                        backgroundColor: day === 0
-                                                            ? 'rgba(255,255,255,0.05)'
-                                                            : `rgba(168, 85, 247, ${0.2 + day * 0.2})`,
-                                                    }}
-                                                    title={`${day} contributions`}
-                                                />
-                                            ))}
-                                        </div>
-                                    ))}
+                            <div className="mb-4 flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-vibe-300" />
+                                <h2 className="text-xl font-bold text-white">Onboarding</h2>
+                            </div>
+
+                            {hasAnyProgress ? (
+                                <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+                                    <p className="text-sm text-gray-300">
+                                        Onboarding is already behind you: the account has real saved progress. The best next step is to continue the active track and keep the streak alive.
+                                    </p>
+                                    <div className="mt-4 flex flex-wrap gap-3">
+                                        <Link to="/home" className="btn-neon px-4 py-2 text-sm">
+                                            Back to home
+                                        </Link>
+                                        <Link to="/lessons" className="btn-neon-outline px-4 py-2 text-sm">
+                                            Open lessons
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center justify-end gap-2 mt-4 text-xs text-gray-500">
-                                <span>Less</span>
-                                {[0.1, 0.3, 0.5, 0.7, 0.9].map((opacity) => (
-                                    <div
-                                        key={opacity}
-                                        className="w-3 h-3 rounded-sm"
-                                        style={{ backgroundColor: `rgba(168, 85, 247, ${opacity})` }}
-                                    />
-                                ))}
-                                <span>More</span>
-                            </div>
-                        </motion.div>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Language Skills */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="glass p-6"
-                        >
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <Star className="w-5 h-5 text-vibe-400" />
-                                Language Proficiency
-                            </h2>
-                            <div className="space-y-4">
-                                {languageSkills.map((lang, index) => (
-                                    <motion.div
-                                        key={lang.name}
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.4 + index * 0.1 }}
-                                    >
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="flex items-center gap-2 text-sm text-white">
-                                                <span>{lang.icon}</span>
-                                                {lang.name}
-                                            </span>
-                                            <span className="text-sm text-vibe-400">{lang.level}%</span>
+                            ) : (
+                                <div className="rounded-[1.5rem] border border-vibe-400/20 bg-vibe-500/10 p-5">
+                                    <p className="text-sm text-gray-200">
+                                        New accounts start honestly now. No fake achievements, just a clear path: choose a track, open day 1, solve the first task, get the first XP.
+                                    </p>
+                                    <div className="mt-5 grid gap-3 md:grid-cols-3">
+                                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                            <p className="text-sm text-gray-400">Step 1</p>
+                                            <p className="mt-1 font-semibold text-white">Choose a language</p>
                                         </div>
-                                        <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${lang.level}%` }}
-                                                transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
-                                                className="h-full bg-gradient-to-r from-vibe-500 to-vibe-400 rounded-full"
-                                            />
+                                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                            <p className="text-sm text-gray-400">Step 2</p>
+                                            <p className="mt-1 font-semibold text-white">Open the first lesson</p>
                                         </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </motion.div>
-
-                        {/* Settings Quick Access */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="glass p-6"
-                        >
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <Settings className="w-5 h-5 text-vibe-400" />
-                                Settings
-                            </h2>
-                            <div className="space-y-2">
-                                {[
-                                    { icon: Moon, label: 'Dark Mode', enabled: true },
-                                    { icon: Bell, label: 'Notifications', enabled: true },
-                                    { icon: Shield, label: 'Privacy', enabled: false },
-                                ].map((setting) => (
-                                    <div
-                                        key={setting.label}
-                                        className="flex items-center justify-between p-3 rounded-xl hover:bg-dark-700/50 transition-colors cursor-pointer"
-                                    >
-                                        <span className="flex items-center gap-3 text-sm text-gray-300">
-                                            <setting.icon className="w-4 h-4 text-gray-500" />
-                                            {setting.label}
-                                        </span>
-                                        <div className={`w-10 h-6 rounded-full relative transition-colors ${setting.enabled ? 'bg-vibe-500' : 'bg-dark-600'
-                                            }`}>
-                                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${setting.enabled ? 'right-1' : 'left-1'
-                                                }`} />
+                                        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                            <p className="text-sm text-gray-400">Step 3</p>
+                                            <p className="mt-1 font-semibold text-white">Solve the first task</p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </motion.div>
+                                    <Link to="/lessons" className="btn-neon mt-5 inline-flex px-5 py-3 text-sm">
+                                        Start onboarding
+                                    </Link>
+                                </div>
+                            )}
+                        </motion.section>
+                    </div>
 
-                        {/* View Analytics */}
-                        <Link to="/analytics">
-                            <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                className="glass-hover p-4 flex items-center justify-between cursor-pointer"
+                    <div className="space-y-6">
+                        <motion.section
+                            initial={{ opacity: 0, x: 16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="glass rounded-[2rem] p-6"
+                        >
+                            <div className="mb-4 flex items-center gap-2">
+                                <Wallet className="h-5 w-5 text-amber-300" />
+                                <h2 className="text-lg font-bold text-white">Plan and payment</h2>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                    <p className="text-sm text-gray-400">Current plan</p>
+                                    <p className="mt-1 font-medium text-white">{isPro ? 'VibeStudy Pro' : 'Free'}</p>
+                                </div>
+                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                    <p className="text-sm text-gray-400">Status</p>
+                                    <p className="mt-1 font-medium text-white">{subscription?.status ?? 'free'}</p>
+                                </div>
+                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                    <p className="text-sm text-gray-400">What is unlocked now</p>
+                                    <p className="mt-1 font-medium text-white">
+                                        {isPro
+                                            ? `${entitlements.length} active entitlement records`
+                                            : '1 track, first 3 days, and limited AI hints'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {!isPro ? (
+                                <div className="mt-5 space-y-3 rounded-[1.5rem] border border-amber-300/20 bg-amber-300/10 p-4">
+                                    <p className="text-sm text-amber-50">
+                                        Upgrade uses a direct wallet payment now. Open the pricing page, send the exact USDT amount, and submit the transaction hash for review.
+                                    </p>
+                                    <Link
+                                        to="/pricing"
+                                        className="inline-flex rounded-2xl border border-amber-200/25 bg-amber-300/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-300/25"
+                                    >
+                                        Open payment page
+                                    </Link>
+
+                                    {latestPaymentRequest ? (
+                                        <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white">
+                                            <p className="font-semibold">Latest payment request</p>
+                                            <p className="mt-2">Status: {latestPaymentRequest.status}</p>
+                                            <p className="mt-2">Plan: {latestPaymentRequest.plan_code}</p>
+                                            <p className="mt-2 break-all text-amber-100">
+                                                Tx hash: {latestPaymentRequest.tx_hash}
+                                            </p>
+                                        </div>
+                                    ) : null}
+
+                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                                        <p className="font-semibold text-white">Wallet</p>
+                                        <p className="mt-2 break-all">{MANUAL_PAYMENT_WALLET_ADDRESS}</p>
+                                        <p className="mt-2 text-slate-300">Network: {MANUAL_PAYMENT_NETWORK_LABEL}</p>
+                                    </div>
+
+                                    {billingError ? (
+                                        <div className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                                            {billingError}
+                                        </div>
+                                    ) : null}
+                                </div>
+                            ) : (
+                                <div className="mt-5 space-y-3 rounded-[1.5rem] border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-50">
+                                    <p>
+                                        Paid access is active. Free-tier limits are removed and the account can use the full learning route.
+                                    </p>
+                                    <p className="text-emerald-100">
+                                        Provider: {subscription?.provider ?? 'manual'} • Status: {subscription?.status ?? 'active'}
+                                    </p>
+                                    {billingError ? (
+                                        <div className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                                            {billingError}
+                                        </div>
+                                    ) : null}
+                                </div>
+                            )}
+                        </motion.section>
+
+                        <motion.section
+                            initial={{ opacity: 0, x: 16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.25 }}
+                            className="glass rounded-[2rem] p-6"
+                        >
+                            <h2 className="mb-4 text-lg font-bold text-white">Account state</h2>
+                            <div className="space-y-3">
+                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                    <p className="text-sm text-gray-400">Email</p>
+                                    <p className="mt-1 font-medium text-white">{user?.email || 'Not found'}</p>
+                                </div>
+                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                    <p className="text-sm text-gray-400">Latest visible result</p>
+                                    <p className="mt-1 font-medium text-white">
+                                        {hasAnyProgress ? `${completedLessons} lessons and ${completedTasks.length} tasks` : 'No visible activity yet'}
+                                    </p>
+                                </div>
+                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                    <p className="text-sm text-gray-400">Account mode</p>
+                                    <p className="mt-1 font-medium text-white">{hasAnyProgress ? 'Active' : 'New'}</p>
+                                </div>
+                            </div>
+                        </motion.section>
+
+                        <motion.section
+                            initial={{ opacity: 0, x: 16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.35 }}
+                            className="glass rounded-[2rem] border border-red-500/20 p-6"
+                        >
+                            <div className="mb-4 flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-red-400" />
+                                <h2 className="text-lg font-bold text-white">Reset progress</h2>
+                            </div>
+
+                            <p className="text-sm text-gray-300">
+                                This is useful for test accounts and demos. It removes completed lessons, tasks, achievements, and returns XP, level, and streak to the starting state.
+                            </p>
+
+                            {resetMessage ? (
+                                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-200">
+                                    {resetMessage}
+                                </div>
+                            ) : null}
+
+                            <motion.button
+                                whileHover={{ scale: isResetting ? 1 : 1.02 }}
+                                whileTap={{ scale: isResetting ? 1 : 0.98 }}
+                                onClick={() => void handleReset()}
+                                disabled={isResetting}
+                                className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-medium transition-colors ${
+                                    confirmReset
+                                        ? 'bg-red-500 text-white hover:bg-red-400'
+                                        : 'bg-red-500/15 text-red-200 hover:bg-red-500/25'
+                                } ${isResetting ? 'cursor-not-allowed opacity-70' : ''}`}
                             >
-                                <span className="text-white font-medium">View Detailed Analytics</span>
-                                <ChevronRight className="w-5 h-5 text-vibe-400" />
-                            </motion.div>
-                        </Link>
+                                <RotateCcw className="h-4 w-4" />
+                                {isResetting
+                                    ? 'Resetting data...'
+                                    : confirmReset
+                                        ? 'Confirm full reset'
+                                        : 'Reset my progress'}
+                            </motion.button>
+                        </motion.section>
+
+                        <motion.section
+                            initial={{ opacity: 0, x: 16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5"
+                        >
+                            <p className="text-sm font-medium text-white">Service pages</p>
+                            <div className="mt-3 flex flex-wrap gap-3 text-sm text-vibe-200">
+                                <Link to="/pricing" className="transition-colors hover:text-white">
+                                    Pricing
+                                </Link>
+                                <Link to="/privacy" className="transition-colors hover:text-white">
+                                    Privacy
+                                </Link>
+                                <Link to="/terms" className="transition-colors hover:text-white">
+                                    Terms
+                                </Link>
+                                <Link to="/support" className="transition-colors hover:text-white">
+                                    Support
+                                </Link>
+                            </div>
+                        </motion.section>
                     </div>
                 </div>
             </div>
