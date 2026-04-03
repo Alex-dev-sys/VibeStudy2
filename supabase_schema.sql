@@ -70,7 +70,7 @@ create table public.ai_request_log (
 create table public.subscriptions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users on delete cascade not null,
-  provider text not null check (provider in ('cryptomus', 'yookassa', 'stripe', 'manual')),
+  provider text not null check (provider in ('binance', 'cryptomus', 'yookassa', 'stripe', 'manual')),
   provider_customer_id text,
   provider_subscription_id text,
   plan_code text not null check (plan_code in ('free', 'pro_monthly', 'pro_three_month')),
@@ -113,7 +113,7 @@ create table public.entitlements (
 
 create table public.billing_events (
   id uuid primary key default gen_random_uuid(),
-  provider text not null check (provider in ('cryptomus', 'yookassa', 'stripe', 'manual')),
+  provider text not null check (provider in ('binance', 'cryptomus', 'yookassa', 'stripe', 'manual')),
   provider_event_id text not null,
   event_type text not null,
   user_id uuid references auth.users on delete set null,
@@ -136,6 +136,30 @@ create table public.feature_usage (
   unique(user_id, feature_code, usage_date)
 );
 
+create table public.payment_orders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users on delete cascade not null,
+  provider text not null check (provider in ('binance', 'cryptomus', 'yookassa', 'stripe', 'manual')),
+  plan_code text not null check (plan_code in ('pro_monthly', 'pro_three_month')),
+  status text not null check (status in ('created', 'pending', 'paid', 'canceled', 'expired', 'error', 'refunding', 'refunded')),
+  merchant_trade_no text not null,
+  provider_order_id text,
+  provider_transaction_id text,
+  amount numeric(18, 8) not null,
+  currency text not null,
+  checkout_url text,
+  deeplink text,
+  universal_url text,
+  qr_code_link text,
+  order_expires_at timestamptz,
+  paid_at timestamptz,
+  last_checked_at timestamptz,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(provider, merchant_trade_no)
+);
+
 alter table public.profiles enable row level security;
 alter table public.user_progress enable row level security;
 alter table public.completed_tasks enable row level security;
@@ -145,6 +169,7 @@ alter table public.subscriptions enable row level security;
 alter table public.entitlements enable row level security;
 alter table public.billing_events enable row level security;
 alter table public.feature_usage enable row level security;
+alter table public.payment_orders enable row level security;
 
 create policy "Public profiles are viewable by everyone"
   on public.profiles for select
@@ -231,6 +256,15 @@ create policy "Service role manages billing events"
   using (auth.role() = 'service_role')
   with check (auth.role() = 'service_role');
 
+create policy "Users can view own payment orders"
+  on public.payment_orders for select
+  using (auth.uid() = user_id);
+
+create policy "Service role manages payment orders"
+  on public.payment_orders for all
+  using (auth.role() = 'service_role')
+  with check (auth.role() = 'service_role');
+
 create or replace function public.set_updated_at()
 returns trigger as $$
 begin
@@ -276,6 +310,10 @@ create trigger set_feature_usage_updated_at
   before update on public.feature_usage
   for each row execute function public.set_updated_at();
 
+create trigger set_payment_orders_updated_at
+  before update on public.payment_orders
+  for each row execute function public.set_updated_at();
+
 create index idx_user_progress_user_id on public.user_progress(user_id);
 create index idx_user_progress_course_id on public.user_progress(course_id);
 create index idx_completed_tasks_user_id on public.completed_tasks(user_id);
@@ -287,3 +325,6 @@ create index idx_subscriptions_status on public.subscriptions(status, current_pe
 create index idx_entitlements_user_lookup on public.entitlements(user_id, entitlement_code, active);
 create index idx_billing_events_subscription_id on public.billing_events(subscription_id);
 create index idx_feature_usage_user_lookup on public.feature_usage(user_id, feature_code, usage_date desc);
+create unique index idx_payment_orders_provider_order_id on public.payment_orders(provider, provider_order_id) where provider_order_id is not null;
+create index idx_payment_orders_user_lookup on public.payment_orders(user_id, created_at desc);
+create index idx_payment_orders_status_lookup on public.payment_orders(status, order_expires_at);

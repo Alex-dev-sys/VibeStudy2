@@ -1,26 +1,26 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.90.1';
 import {
-    cryptomusRequest,
-    type CryptomusRecurrence,
-    type CryptomusRecurrencePeriod,
-    getCryptomusEnv,
-} from '../_shared/cryptomus.ts';
+    type BinanceOrderResult,
+    type BinancePaidPlanCode,
+    binancePayRequest,
+    createMerchantTradeNo,
+    getBinanceCheckoutRedirectUrl,
+    getBinancePayEnv,
+} from '../_shared/binance-pay.ts';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-type PaidPlanCode = 'pro_monthly' | 'pro_three_month';
-
 interface CreateCheckoutPayload {
-    planCode: PaidPlanCode;
+    planCode: BinancePaidPlanCode;
     successPath?: string;
     cancelPath?: string;
 }
 
 function createUserClient(request: Request) {
-    return createClient(getCryptomusEnv('SUPABASE_URL'), getCryptomusEnv('SUPABASE_ANON_KEY'), {
+    return createClient(getBinancePayEnv('SUPABASE_URL'), getBinancePayEnv('SUPABASE_ANON_KEY'), {
         auth: {
             persistSession: false,
             autoRefreshToken: false,
@@ -34,7 +34,7 @@ function createUserClient(request: Request) {
 }
 
 function createAdminClient() {
-    return createClient(getCryptomusEnv('SUPABASE_URL'), getCryptomusEnv('SUPABASE_SERVICE_ROLE_KEY'), {
+    return createClient(getBinancePayEnv('SUPABASE_URL'), getBinancePayEnv('SUPABASE_SERVICE_ROLE_KEY'), {
         auth: {
             persistSession: false,
             autoRefreshToken: false,
@@ -51,56 +51,88 @@ function normalizePath(path: string | undefined, fallback: string) {
 }
 
 function buildRedirectUrl(request: Request, path: string) {
-    const origin = request.headers.get('Origin') ?? getCryptomusEnv('APP_BASE_URL');
-    return new URL(path, origin).toString();
+    const origin = request.headers.get('Origin') ?? getBinancePayEnv('APP_BASE_URL');
+    const url = new URL(path, origin);
+    if (Array.from(url.searchParams.keys()).length > 1) {
+        throw new Error('Binance Pay redirect URLs can only contain one query parameter.');
+    }
+    return url.toString();
 }
 
-function getPlanConfig(planCode: PaidPlanCode) {
+function getPlanConfig(planCode: BinancePaidPlanCode) {
+    const currency = Deno.env.get('BINANCE_PAY_CURRENCY') ?? 'USDT';
+
     switch (planCode) {
         case 'pro_monthly':
             return {
-                amount: getCryptomusEnv('CRYPTOMUS_PRO_MONTHLY_AMOUNT'),
-                period: 'monthly' as CryptomusRecurrencePeriod,
+                planCode,
+                amount: Number(getBinancePayEnv('BINANCE_PAY_PRO_MONTHLY_AMOUNT')),
+                currency,
+                title: 'VibeStudy Pro 30 Days',
+                description: 'VibeStudy premium access for 30 days',
             };
         case 'pro_three_month':
             return {
-                amount: getCryptomusEnv('CRYPTOMUS_PRO_THREE_MONTH_AMOUNT'),
-                period: 'three_month' as CryptomusRecurrencePeriod,
+                planCode,
+                amount: Number(getBinancePayEnv('BINANCE_PAY_PRO_THREE_MONTH_AMOUNT')),
+                currency,
+                title: 'VibeStudy Pro 90 Days',
+                description: 'VibeStudy premium access for 90 days',
             };
     }
 }
 
-async function createCryptomusSubscription(
-    request: Request,
-    userId: string,
-    userEmail: string | undefined,
-    planCode: PaidPlanCode,
-    successUrl: string,
-    returnUrl: string
-) {
-    const plan = getPlanConfig(planCode);
-    const orderId = `vibestudy:${userId}:${planCode}:${Date.now()}`;
-
-    const recurrence = await cryptomusRequest<CryptomusRecurrence>('/v1/recurrence/create', {
-        amount: plan.amount,
-        currency: getCryptomusEnv('CRYPTOMUS_INVOICE_CURRENCY'),
-        name: `VibeStudy ${planCode}`,
-        period: plan.period,
-        order_id: orderId,
-        url_callback: new URL('/functions/v1/billing-webhook', getCryptomusEnv('SUPABASE_URL')).toString(),
-        url_success: successUrl,
-        url_return: returnUrl,
-        additional_data: JSON.stringify({
-            userId,
-            planCode,
-            userEmail: userEmail ?? null,
-            orderId,
+async function createBinanceOrder(params: {
+    userId: string;
+    userEmail?: string;
+    planCode: BinancePaidPlanCode;
+    successUrl: string;
+    cancelUrl: string;
+}) {
+    const plan = getPlanConfig(params.planCode);
+    const merchantTradeNo = createMerchantTradeNo(params.userId, params.planCode);
+    const webhookUrl = new URL('/functions/v1/billing-webhook', getBinancePayEnv('SUPABASE_URL')).toString();
+    const orderExpireMinutes = Number(Deno.env.get('BINANCE_PAY_ORDER_EXPIRE_MINUTES') ?? '20');
+    const payload = {
+        env: {
+            terminalType: 'WEB',
+        },
+        merchantTradeNo,
+        orderAmount: plan.amount,
+        currency: plan.currency,
+        description: plan.description,
+        goodsDetails: [
+            {
+                goodsType: '02',
+                goodsCategory: 'Z000',
+                referenceGoodsId: plan.planCode.toUpperCase(),
+                goodsName: plan.title,
+                goodsDetail: plan.description,
+            },
+        ],
+        returnUrl: params.successUrl,
+        cancelUrl: params.cancelUrl,
+        orderExpireTime: Date.now() + orderExpireMinutes * 60_000,
+        passThroughInfo: JSON.stringify({
+            userId: params.userId,
+            planCode: params.planCode,
         }),
-    });
+        webhookUrl,
+        ...(params.userEmail
+            ? {
+                  buyer: {
+                      buyerEmail: params.userEmail,
+                  },
+              }
+            : {}),
+    };
+
+    const order = await binancePayRequest<BinanceOrderResult>('/binancepay/openapi/v3/order', payload);
 
     return {
-        recurrence,
-        orderId,
+        order,
+        merchantTradeNo,
+        plan,
     };
 }
 
@@ -121,13 +153,15 @@ Deno.serve(async (request) => {
         const payload = (await request.json()) as Partial<CreateCheckoutPayload>;
         if (payload.planCode !== 'pro_monthly' && payload.planCode !== 'pro_three_month') {
             return Response.json(
-                { error: 'Unsupported plan. Only crypto recurring plans can open checkout.' },
+                { error: 'Unsupported plan. Only Binance Pay plans can open checkout.' },
                 { status: 400, headers: corsHeaders }
             );
         }
 
         const successPath = normalizePath(payload.successPath, '/profile?billing=success');
         const cancelPath = normalizePath(payload.cancelPath, '/pricing?billing=cancelled');
+        const successUrl = buildRedirectUrl(request, successPath);
+        const cancelUrl = buildRedirectUrl(request, cancelPath);
 
         const userClient = createUserClient(request);
         const admin = createAdminClient();
@@ -140,41 +174,42 @@ Deno.serve(async (request) => {
             return Response.json({ error: 'Unauthorized.' }, { status: 401, headers: corsHeaders });
         }
 
-        const successUrl = buildRedirectUrl(request, successPath);
-        const returnUrl = buildRedirectUrl(request, cancelPath);
-        const { recurrence, orderId } = await createCryptomusSubscription(
-            request,
-            user.id,
-            typeof user.email === 'string' ? user.email : undefined,
-            payload.planCode,
+        const { order, merchantTradeNo, plan } = await createBinanceOrder({
+            userId: user.id,
+            userEmail: typeof user.email === 'string' ? user.email : undefined,
+            planCode: payload.planCode,
             successUrl,
-            returnUrl
-        );
+            cancelUrl,
+        });
 
-        const now = new Date().toISOString();
-        const { error: upsertError } = await admin.from('subscriptions').upsert(
+        const { error: upsertError } = await admin.from('payment_orders').upsert(
             {
                 user_id: user.id,
-                provider: 'cryptomus',
-                provider_customer_id: null,
-                provider_subscription_id: recurrence.uuid,
+                provider: 'binance',
                 plan_code: payload.planCode,
-                status: recurrence.status === 'active' ? 'active' : 'incomplete',
-                current_period_start: null,
-                current_period_end: null,
-                cancel_at_period_end: recurrence.status === 'cancel_by_user' || recurrence.status === 'cancel_by_merchant',
-                canceled_at: null,
-                trial_ends_at: null,
+                status: 'created',
+                merchant_trade_no: merchantTradeNo,
+                provider_order_id: order.prepayId,
+                provider_transaction_id: null,
+                amount: String(plan.amount),
+                currency: order.currency,
+                checkout_url: order.checkoutUrl ?? null,
+                deeplink: order.deeplink ?? null,
+                universal_url: order.universalUrl ?? null,
+                qr_code_link: order.qrcodeLink ?? null,
+                order_expires_at: new Date(order.expireTime).toISOString(),
+                paid_at: null,
+                last_checked_at: null,
                 metadata: {
-                    order_id: orderId,
-                    checkout_url: recurrence.url,
-                    currency: recurrence.currency,
-                    recurring_period: recurrence.period,
-                    provider_status: recurrence.status,
+                    terminal_type: order.terminalType,
+                    total_fee: order.totalFee,
+                    qr_content: order.qrContent ?? null,
+                    success_url: successUrl,
+                    cancel_url: cancelUrl,
                 },
-                updated_at: now,
+                updated_at: new Date().toISOString(),
             },
-            { onConflict: 'provider,provider_subscription_id' }
+            { onConflict: 'provider,merchant_trade_no' }
         );
 
         if (upsertError) {
@@ -184,9 +219,13 @@ Deno.serve(async (request) => {
         return Response.json(
             {
                 ok: true,
-                provider: 'cryptomus',
-                sessionId: recurrence.uuid,
-                url: recurrence.url,
+                provider: 'binance',
+                sessionId: order.prepayId,
+                url: getBinanceCheckoutRedirectUrl(order),
+                checkoutUrl: order.checkoutUrl ?? null,
+                universalUrl: order.universalUrl ?? null,
+                deeplink: order.deeplink ?? null,
+                expiresAt: new Date(order.expireTime).toISOString(),
             },
             { headers: corsHeaders }
         );

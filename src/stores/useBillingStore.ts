@@ -1,17 +1,22 @@
 import { create } from 'zustand';
-import type { BillingEntitlementCode, BillingFeatureCode, BillingPlanCode, SubscriptionAccessState } from '../types/billing.types';
+import type {
+    BillingEntitlementCode,
+    BillingFeatureCode,
+    BillingPlanCode,
+    SubscriptionAccessState,
+} from '../types/billing.types';
 import type {
     EntitlementRecord,
     FeatureUsageRecord,
-    ManualPaymentRequestRecord,
+    PaymentOrderRecord,
     SubscriptionRecord,
 } from '../types/database.types';
 import {
-    cancelCryptoSubscription,
+    createCheckoutSession,
     fetchBillingOverview,
     getFeatureUsageCount,
     hasEntitlement,
-    submitManualPaymentRequest,
+    type CheckoutSessionResult,
 } from '../lib/billing';
 
 interface BillingState {
@@ -19,19 +24,20 @@ interface BillingState {
     subscription: SubscriptionRecord | null;
     entitlements: EntitlementRecord[];
     featureUsage: FeatureUsageRecord[];
-    paymentRequests: ManualPaymentRequestRecord[];
+    paymentOrders: PaymentOrderRecord[];
     access: SubscriptionAccessState;
     isLoading: boolean;
-    isSubmittingPayment: boolean;
-    isCancelingSubscription: boolean;
+    isStartingCheckout: boolean;
     error: string | null;
     hydrate: (userId: string) => Promise<void>;
     clear: () => void;
-    submitPayment: (
+    startCheckout: (
         planCode: Exclude<BillingPlanCode, 'free'>,
-        txHash: string
-    ) => Promise<ManualPaymentRequestRecord | null>;
-    cancelSubscription: () => Promise<boolean>;
+        options?: {
+            successPath?: string;
+            cancelPath?: string;
+        }
+    ) => Promise<CheckoutSessionResult | null>;
     hasEntitlement: (entitlementCode: BillingEntitlementCode) => boolean;
     getFeatureUsage: (featureCode: BillingFeatureCode) => number;
 }
@@ -49,11 +55,10 @@ export const useBillingStore = create<BillingState>((set, get) => ({
     subscription: null,
     entitlements: [],
     featureUsage: [],
-    paymentRequests: [],
+    paymentOrders: [],
     access: initialAccessState,
     isLoading: false,
-    isSubmittingPayment: false,
-    isCancelingSubscription: false,
+    isStartingCheckout: false,
     error: null,
 
     hydrate: async (userId) => {
@@ -70,7 +75,7 @@ export const useBillingStore = create<BillingState>((set, get) => ({
                 subscription: overview.subscription,
                 entitlements: overview.entitlements,
                 featureUsage: overview.featureUsage,
-                paymentRequests: overview.paymentRequests,
+                paymentOrders: overview.paymentOrders,
                 access: overview.access,
                 isLoading: false,
             });
@@ -86,52 +91,25 @@ export const useBillingStore = create<BillingState>((set, get) => ({
             subscription: null,
             entitlements: [],
             featureUsage: [],
-            paymentRequests: [],
+            paymentOrders: [],
             access: initialAccessState,
             isLoading: false,
-            isSubmittingPayment: false,
-            isCancelingSubscription: false,
+            isStartingCheckout: false,
             error: null,
         });
     },
 
-    submitPayment: async (planCode, txHash) => {
-        set({ isSubmittingPayment: true, error: null });
+    startCheckout: async (planCode, options) => {
+        set({ isStartingCheckout: true, error: null });
 
         try {
-            const request = await submitManualPaymentRequest({ planCode, txHash });
-            set((state) => ({
-                isSubmittingPayment: false,
-                paymentRequests: [request, ...state.paymentRequests.filter((item) => item.id !== request.id)],
-            }));
-
-            return request;
+            const session = await createCheckoutSession(planCode, options);
+            set({ isStartingCheckout: false });
+            return session;
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to submit the payment hash.';
-            set({ isSubmittingPayment: false, error: message });
+            const message = error instanceof Error ? error.message : 'Failed to start Binance Pay checkout.';
+            set({ isStartingCheckout: false, error: message });
             return null;
-        }
-    },
-
-    cancelSubscription: async () => {
-        set({ isCancelingSubscription: true, error: null });
-
-        try {
-            await cancelCryptoSubscription();
-
-            const userId = get().ownerUserId;
-            if (userId) {
-                await get().hydrate(userId);
-            } else {
-                set({ isCancelingSubscription: false });
-            }
-
-            set({ isCancelingSubscription: false });
-            return true;
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to cancel crypto subscription.';
-            set({ isCancelingSubscription: false, error: message });
-            return false;
         }
     },
 

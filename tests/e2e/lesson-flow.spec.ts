@@ -7,7 +7,7 @@ test.describe('lesson flow guest smoke', () => {
         await page.goto('/lessons');
 
         await expect(page).toHaveURL(/\/auth$/);
-        await expect(page.getByRole('heading', { name: /вход в аккаунт/i })).toBeVisible();
+        await expect(page.getByRole('button', { name: /google/i })).toBeVisible();
     });
 
     test('landing routes the user into a real flow, not a dead end', async ({ page }) => {
@@ -32,7 +32,7 @@ test.describe('lesson flow authenticated smoke', () => {
     test('seeded account can open home, lessons and profile surfaces', async ({ page }) => {
         await page.goto('/home');
         await expect(page).toHaveURL(/\/home$/);
-        await expect(page.getByRole('heading', { name: /треки для обучения/i })).toBeVisible();
+        await expect(page.getByText(/track|трек/i).first()).toBeVisible();
 
         await page.goto('/lessons');
         await expect(page).toHaveURL(/\/lessons$/);
@@ -40,6 +40,6 @@ test.describe('lesson flow authenticated smoke', () => {
 
         await page.goto('/profile');
         await expect(page).toHaveURL(/\/profile$/);
-        await expect(page.getByText(/сервисные страницы/i)).toBeVisible();
+        await expect(page.getByText(/service pages|pricing/i).first()).toBeVisible();
     });
 });

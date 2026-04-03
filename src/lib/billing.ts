@@ -9,8 +9,7 @@ import type {
 import type {
     EntitlementRecord,
     FeatureUsageRecord,
-    ManualPaymentRequestInsert,
-    ManualPaymentRequestRecord,
+    PaymentOrderRecord,
     SubscriptionRecord,
 } from '../types/database.types';
 
@@ -18,18 +17,17 @@ export interface BillingOverview {
     subscription: SubscriptionRecord | null;
     entitlements: EntitlementRecord[];
     featureUsage: FeatureUsageRecord[];
-    paymentRequests: ManualPaymentRequestRecord[];
+    paymentOrders: PaymentOrderRecord[];
     access: SubscriptionAccessState;
 }
 
 export interface CheckoutSessionResult {
     sessionId: string;
     url: string;
-}
-
-export interface ManualPaymentRequestSubmission {
-    planCode: Exclude<BillingPlanCode, 'free'>;
-    txHash: string;
+    checkoutUrl: string | null;
+    universalUrl: string | null;
+    deeplink: string | null;
+    expiresAt: string | null;
 }
 
 export interface CryptoPlanDefinition {
@@ -45,42 +43,57 @@ export interface CryptoPlanDefinition {
 
 export const FREE_TRACK_DAY_LIMIT = 3;
 export const FREE_DAILY_HINT_LIMIT = 3;
-export const MANUAL_PAYMENT_WALLET_ADDRESS = 'TWZVDV68FQxw1EPriHTzEAsw7U6kHjBzMh';
-export const MANUAL_PAYMENT_NETWORK_LABEL = 'USDT (TRC20)';
-export const MANUAL_PAYMENT_ASSET_SYMBOL = 'USDT';
-export const MANUAL_PAYMENT_EXPLORER_BASE_URL = 'https://tronscan.org/#/transaction/';
 
 export const CRYPTO_PLAN_DEFINITIONS: CryptoPlanDefinition[] = [
     {
         planCode: 'pro_monthly',
-        title: 'Monthly',
+        title: '30 Days',
         price: '29 USDT',
-        cadence: 'month',
-        subtitle: 'Send USDT to the project wallet, then submit the transaction hash for manual review.',
+        cadence: 'one-time',
+        subtitle: 'Hosted Binance Pay checkout for the full product, with no auto-renew attached to the purchase.',
         features: [
             'All tracks and all lesson days',
-            'AI hints and reviews without the free limit after approval',
-            'Direct wallet payment without an external checkout',
+            'Unlimited AI hints and review summaries',
+            'Cinematic hosted checkout through Binance Pay',
         ],
-        checkoutLabel: 'Submit tx hash',
+        checkoutLabel: 'Continue to secure Binance Pay',
     },
     {
         planCode: 'pro_three_month',
-        title: '3 months',
+        title: '90 Days',
         price: '79 USDT',
-        cadence: '3 months',
+        cadence: 'one-time',
         badge: 'Best value',
-        subtitle: 'Pay once for a longer access window, then submit the transaction hash for review.',
+        subtitle: 'Longer premium access at the best effective monthly price, still as a one-time Binance Pay purchase.',
         features: [
-            'Everything from Monthly',
-            'Longer access window after approval',
-            'Best-value direct wallet plan in the current launch',
+            'Everything from 30 Days',
+            'Lower effective monthly cost',
+            'Best-value hosted Binance Pay option',
         ],
-        checkoutLabel: 'Submit tx hash',
+        checkoutLabel: 'Continue to secure Binance Pay',
     },
 ];
 
 const PAID_ACCESS_STATUSES: BillingSubscriptionStatus[] = ['active', 'trialing', 'past_due'];
+
+function isMissingBillingTableError(error: { message?: string } | null) {
+    const message = error?.message?.toLowerCase() ?? '';
+    return (
+        message.includes('subscriptions') ||
+        message.includes('entitlements') ||
+        message.includes('feature_usage') ||
+        message.includes('payment_orders') ||
+        message.includes('schema cache')
+    );
+}
+
+function hasUnexpiredWindow(currentPeriodEnd: string | null) {
+    if (!currentPeriodEnd) {
+        return true;
+    }
+
+    return new Date(currentPeriodEnd).getTime() > Date.now();
+}
 
 export function deriveAccessState(subscription: SubscriptionRecord | null): SubscriptionAccessState {
     if (!subscription) {
@@ -93,28 +106,22 @@ export function deriveAccessState(subscription: SubscriptionRecord | null): Subs
         };
     }
 
+    const effectiveStatus =
+        PAID_ACCESS_STATUSES.includes(subscription.status) && !hasUnexpiredWindow(subscription.current_period_end)
+            ? 'expired'
+            : subscription.status;
+
     return {
-        planCode: subscription.plan_code,
-        status: subscription.status,
-        canAccessPaidFeatures: PAID_ACCESS_STATUSES.includes(subscription.status),
+        planCode: effectiveStatus === 'expired' ? 'free' : subscription.plan_code,
+        status: effectiveStatus,
+        canAccessPaidFeatures: PAID_ACCESS_STATUSES.includes(subscription.status) && hasUnexpiredWindow(subscription.current_period_end),
         currentPeriodEnd: subscription.current_period_end,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
     };
 }
 
-function isMissingBillingTableError(error: { message?: string } | null) {
-    const message = error?.message?.toLowerCase() ?? '';
-    return (
-        message.includes('subscriptions') ||
-        message.includes('entitlements') ||
-        message.includes('feature_usage') ||
-        message.includes('manual_payment_requests') ||
-        message.includes('schema cache')
-    );
-}
-
 export async function fetchBillingOverview(userId: string): Promise<BillingOverview> {
-    const [subscriptionResult, entitlementsResult, usageResult] = await Promise.all([
+    const [subscriptionResult, entitlementsResult, usageResult, paymentOrdersResult] = await Promise.all([
         supabase
             .from('subscriptions')
             .select('*')
@@ -132,17 +139,24 @@ export async function fetchBillingOverview(userId: string): Promise<BillingOverv
             .eq('user_id', userId)
             .order('usage_date', { ascending: false })
             .limit(30),
+        supabase
+            .from('payment_orders')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(10),
     ]);
 
-    if (subscriptionResult.error || entitlementsResult.error || usageResult.error) {
-        const firstError = subscriptionResult.error ?? entitlementsResult.error ?? usageResult.error;
+    if (subscriptionResult.error || entitlementsResult.error || usageResult.error || paymentOrdersResult.error) {
+        const firstError =
+            subscriptionResult.error ?? entitlementsResult.error ?? usageResult.error ?? paymentOrdersResult.error;
 
         if (isMissingBillingTableError(firstError)) {
             return {
                 subscription: null,
                 entitlements: [],
                 featureUsage: [],
-                paymentRequests: [],
+                paymentOrders: [],
                 access: deriveAccessState(null),
             };
         }
@@ -153,106 +167,15 @@ export async function fetchBillingOverview(userId: string): Promise<BillingOverv
     const subscription = (subscriptionResult.data?.[0] as SubscriptionRecord | undefined) ?? null;
     const entitlements = (entitlementsResult.data ?? []) as EntitlementRecord[];
     const featureUsage = (usageResult.data ?? []) as FeatureUsageRecord[];
-    const paymentRequestsResult = await supabase
-        .from('manual_payment_requests')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-    if (paymentRequestsResult.error) {
-        if (isMissingBillingTableError(paymentRequestsResult.error)) {
-            return {
-                subscription,
-                entitlements,
-                featureUsage,
-                paymentRequests: [],
-                access: deriveAccessState(subscription),
-            };
-        }
-
-        throw paymentRequestsResult.error;
-    }
-
-    const paymentRequests = (paymentRequestsResult.data ?? []) as ManualPaymentRequestRecord[];
+    const paymentOrders = (paymentOrdersResult.data ?? []) as PaymentOrderRecord[];
 
     return {
         subscription,
         entitlements,
         featureUsage,
-        paymentRequests,
+        paymentOrders,
         access: deriveAccessState(subscription),
     };
-}
-
-export function getPlanAmount(planCode: Exclude<BillingPlanCode, 'free'>) {
-    switch (planCode) {
-        case 'pro_monthly':
-            return '29';
-        case 'pro_three_month':
-            return '79';
-    }
-}
-
-export function getExplorerUrl(txHash: string) {
-    return `${MANUAL_PAYMENT_EXPLORER_BASE_URL}${txHash}`;
-}
-
-export function normalizeTxHash(txHash: string) {
-    return txHash.trim();
-}
-
-export async function submitManualPaymentRequest({
-    planCode,
-    txHash,
-}: ManualPaymentRequestSubmission): Promise<ManualPaymentRequestRecord> {
-    const normalizedTxHash = normalizeTxHash(txHash);
-
-    if (normalizedTxHash.length < 16) {
-        throw new Error('Transaction hash looks too short.');
-    }
-
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        throw userError ?? new Error('You need to sign in before submitting a payment hash.');
-    }
-
-    const payload: ManualPaymentRequestInsert = {
-        user_id: user.id,
-        plan_code: planCode,
-        wallet_address: MANUAL_PAYMENT_WALLET_ADDRESS,
-        network: MANUAL_PAYMENT_NETWORK_LABEL,
-        asset_symbol: MANUAL_PAYMENT_ASSET_SYMBOL,
-        expected_amount: getPlanAmount(planCode),
-        tx_hash: normalizedTxHash,
-        status: 'pending',
-        reviewer_note: null,
-        reviewed_at: null,
-        metadata: {
-            explorerUrl: getExplorerUrl(normalizedTxHash),
-        },
-    };
-
-    const { data, error } = await supabase
-        .from('manual_payment_requests')
-        .insert(payload)
-        .select('*')
-        .single();
-
-    if (error) {
-        const message = error.message.toLowerCase();
-        if (message.includes('duplicate') || message.includes('manual_payment_requests_tx_hash_unique')) {
-            throw new Error('This transaction hash was already submitted.');
-        }
-
-        throw error;
-    }
-
-    return data as ManualPaymentRequestRecord;
 }
 
 export async function createCheckoutSession(
@@ -275,23 +198,17 @@ export async function createCheckoutSession(
     }
 
     if (!data?.url || !data?.sessionId) {
-        throw new Error('Crypto subscription was created without a redirect URL.');
+        throw new Error('Binance checkout was created without a redirect URL.');
     }
 
     return {
         sessionId: data.sessionId as string,
         url: data.url as string,
+        checkoutUrl: (data.checkoutUrl as string | null | undefined) ?? null,
+        universalUrl: (data.universalUrl as string | null | undefined) ?? null,
+        deeplink: (data.deeplink as string | null | undefined) ?? null,
+        expiresAt: (data.expiresAt as string | null | undefined) ?? null,
     };
-}
-
-export async function cancelCryptoSubscription() {
-    const { data, error } = await supabase.functions.invoke('cancel-crypto-subscription');
-
-    if (error) {
-        throw error;
-    }
-
-    return data;
 }
 
 export function hasEntitlement(

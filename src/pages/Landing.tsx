@@ -2,8 +2,6 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
     Sparkles,
-    Code2,
-    Brain,
     ArrowRight,
     Zap,
     Target,
@@ -28,13 +26,13 @@ const tracks = [
 
 const features = [
     {
-        icon: Brain,
+        icon: Terminal,
         title: 'AI-уроки без хаоса',
         description:
             'Урок генерируется под конкретную тему дня, а не как бесконечный чат. Это помогает держать структуру и двигаться по треку последовательно.',
     },
     {
-        icon: Terminal,
+        icon: Zap,
         title: 'Практика прямо в браузере',
         description:
             'Не нужно поднимать окружение, чтобы начать. Теория, задачи и код находятся в одном потоке, без переключения между пятью сервисами.',
@@ -62,26 +60,24 @@ const dailyFlow = [
 
 export default function Landing() {
     return (
-        <div className="relative min-h-screen overflow-hidden">
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.2),_transparent_30%),linear-gradient(180deg,#0b1120_0%,#111827_45%,#0b1120_100%)]" />
-
-            <div className="fixed left-12 top-24 h-80 w-80 rounded-full bg-vibe-600/10 blur-3xl" />
-            <div className="fixed bottom-10 right-10 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="relative min-h-screen overflow-hidden bg-background text-on-surface">
+            <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,_rgba(124,92,255,0.15),_transparent_30%)]" />
+            <div className="fixed left-12 top-24 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+            <div className="fixed bottom-10 right-10 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
 
             <div className="relative z-10">
-                <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+                <nav className="mx-auto flex max-w-7xl items-center justify-between px-12 py-6">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         className="flex items-center gap-3"
                     >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-vibe-500 to-vibe-700 shadow-neon">
-                            <Code2 className="h-6 w-6 text-white" />
-                        </div>
-                        <div>
-                            <span className="block text-xl font-bold text-white">VibeStudy</span>
-                            <span className="block text-xs text-gray-500">AI daily coding coach</span>
-                        </div>
+                        <span className="font-headline text-2xl font-black tracking-tighter text-primary">
+                            VibeStudy
+                        </span>
+                        <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-on-surface-variant">
+                            Neo-Academy
+                        </span>
                     </motion.div>
 
                     <motion.div
@@ -89,35 +85,53 @@ export default function Landing() {
                         animate={{ opacity: 1, y: 0 }}
                         className="hidden items-center gap-8 md:flex"
                     >
-                        <a href="#how-it-works" className="text-gray-400 transition-colors hover:text-white">
+                        <a
+                            href="#how-it-works"
+                            className="text-on-surface-variant transition-colors hover:text-on-surface"
+                        >
                             Как это работает
                         </a>
-                        <a href="#tracks" className="text-gray-400 transition-colors hover:text-white">
+                        <a
+                            href="#tracks"
+                            className="text-on-surface-variant transition-colors hover:text-on-surface"
+                        >
                             Треки
                         </a>
-                        <a href="#product" className="text-gray-400 transition-colors hover:text-white">
+                        <a
+                            href="#product"
+                            className="text-on-surface-variant transition-colors hover:text-on-surface"
+                        >
                             Что внутри
                         </a>
-                        <Link to="/pricing" className="text-gray-400 transition-colors hover:text-white">
+                        <Link
+                            to="/pricing"
+                            className="text-on-surface-variant transition-colors hover:text-on-surface"
+                        >
                             Pricing
                         </Link>
-                        <Link to="/auth" className="btn-neon px-6 py-2">
-                            Войти
+                        <Link to="/auth">
+                            <motion.div
+                                className="btn-neon px-6 py-2 text-sm"
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                            >
+                                Войти
+                            </motion.div>
                         </Link>
                     </motion.div>
                 </nav>
 
-                <section className="mx-auto max-w-7xl px-6 pb-24 pt-20">
-                    <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]">
+                <section className="mx-auto max-w-7xl px-12 pb-24 pt-20">
+                    <div className="grid items-center gap-16 lg:grid-cols-2">
                         <div>
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5 }}
-                                className="mb-6 inline-flex items-center gap-2 rounded-full border border-vibe-500/30 bg-vibe-500/10 px-5 py-2.5"
+                                className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-2.5"
                             >
-                                <Sparkles className="h-4 w-4 text-vibe-300" />
-                                <span className="text-sm font-medium text-vibe-200">
+                                <Sparkles className="h-4 w-4 text-primary" />
+                                <span className="text-sm font-medium text-primary">
                                     Продукт для ежедневного входа в программирование
                                 </span>
                             </motion.div>
@@ -126,7 +140,7 @@ export default function Landing() {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, delay: 0.1 }}
-                                className="mb-6 text-5xl font-bold leading-tight text-white md:text-7xl"
+                                className="font-headline text-5xl font-black leading-tight tracking-tight text-on-surface md:text-7xl"
                             >
                                 Изучай код
                                 <span className="text-gradient"> каждый день</span>,
@@ -138,11 +152,11 @@ export default function Landing() {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.5, delay: 0.2 }}
-                                className="mb-10 max-w-2xl text-lg leading-relaxed text-gray-300"
+                                className="mb-10 max-w-2xl text-lg leading-relaxed text-on-surface-variant"
                             >
-                                VibeStudy ведёт тебя по треку, генерирует урок под тему дня, даёт задачи и сохраняет
-                                прогресс. Без фейковых достижений, без пустых обещаний и без необходимости настраивать
-                                окружение перед первым шагом.
+                                VibeStudy ведёт тебя по треку, генерирует урок под тему дня, даёт
+                                задачи и сохраняет прогресс. Без фейковых достижений, без пустых
+                                обещаний и без необходимости настраивать окружение перед первым шагом.
                             </motion.p>
 
                             <motion.div
@@ -153,7 +167,7 @@ export default function Landing() {
                             >
                                 <Link to="/auth">
                                     <motion.div
-                                        className="btn-neon flex items-center gap-3 rounded-xl px-8 py-4 text-lg"
+                                        className="btn-neon flex items-center gap-3 rounded-full px-8 py-4 text-lg"
                                         whileHover={{ scale: 1.04 }}
                                         whileTap={{ scale: 0.96 }}
                                     >
@@ -165,7 +179,7 @@ export default function Landing() {
 
                                 <a href="#how-it-works">
                                     <motion.div
-                                        className="btn-neon-outline flex items-center gap-3 rounded-xl px-8 py-4 text-lg"
+                                        className="btn-neon-outline flex items-center gap-3 rounded-full px-8 py-4 text-lg"
                                         whileHover={{ scale: 1.04 }}
                                         whileTap={{ scale: 0.96 }}
                                     >
@@ -180,41 +194,47 @@ export default function Landing() {
                             initial={{ opacity: 0, y: 24 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.2 }}
-                            className="glass rounded-[2rem] border border-vibe-500/20 p-6"
+                            className="glass rounded-2xl border border-primary/10 p-6"
                         >
                             <div className="mb-5 flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-500">Сегодняшний цикл</p>
-                                    <h2 className="text-xl font-bold text-white">От входа до первой задачи</h2>
+                                    <p className="text-xs font-label uppercase tracking-widest text-on-surface-variant">
+                                        Сегодняшний цикл
+                                    </p>
+                                    <h2 className="font-headline text-xl font-bold text-on-surface">
+                                        От входа до первой задачи
+                                    </h2>
                                 </div>
-                                <BookOpen className="h-6 w-6 text-vibe-300" />
+                                <BookOpen className="h-6 w-6 text-secondary" />
                             </div>
 
                             <div className="space-y-3">
                                 {dailyFlow.map((step, index) => (
                                     <div
                                         key={step}
-                                        className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
+                                        className="flex items-start gap-3 rounded-2xl border border-white/5 bg-surface-container-lowest px-4 py-4"
                                     >
-                                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-vibe-500/20 text-sm font-semibold text-vibe-200">
+                                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                                             {index + 1}
                                         </div>
-                                        <p className="text-sm leading-relaxed text-gray-200">{step}</p>
+                                        <p className="text-sm leading-relaxed text-on-surface-variant">
+                                            {step}
+                                        </p>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="mt-5 rounded-2xl border border-emerald-400/15 bg-emerald-500/10 px-4 py-4">
+                            <div className="mt-5 rounded-2xl border border-emerald-400/10 bg-emerald-500/10 px-4 py-4">
                                 <p className="text-sm text-emerald-200">
-                                    Запуск сейчас честный: сначала пользователь получает value, а уже потом упирается в
-                                    ограничения или подписку.
+                                    Запуск сейчас честный: сначала пользователь получает value, а уже
+                                    потом упирается в ограничения или подписку.
                                 </p>
                             </div>
                         </motion.div>
                     </div>
                 </section>
 
-                <section className="mx-auto max-w-7xl px-6 pb-20">
+                <section className="mx-auto max-w-7xl px-12 pb-20">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -228,26 +248,30 @@ export default function Landing() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.05 }}
-                                className="glass-hover rounded-[1.75rem] p-6 text-center"
+                                className="glass-hover rounded-2xl p-6 text-center"
                             >
-                                <div className="mb-2 text-4xl font-bold text-gradient">{signal.value}</div>
-                                <div className="text-sm text-gray-400">{signal.label}</div>
+                                <div className="mb-2 font-headline text-4xl font-bold text-gradient">
+                                    {signal.value}
+                                </div>
+                                <div className="text-sm text-on-surface-variant">{signal.label}</div>
                             </motion.div>
                         ))}
                     </motion.div>
                 </section>
 
-                <section id="tracks" className="mx-auto max-w-7xl px-6 py-20">
+                <section id="tracks" className="mx-auto max-w-7xl px-12 py-20">
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
                         className="mb-12 text-center"
                     >
-                        <h2 className="mb-4 text-4xl font-bold text-white">Стартовые треки</h2>
-                        <p className="mx-auto max-w-2xl text-lg text-gray-400">
-                            На первом запуске продукт сфокусирован на трёх треках. Это лучше, чем распыляться на
-                            десятки языков и не доводить ни один до качества.
+                        <h2 className="font-headline text-4xl font-bold text-on-surface">
+                            Стартовые треки
+                        </h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-lg text-on-surface-variant">
+                            На первом запуске продукт сфокусирован на трёх треках. Это лучше, чем
+                            распыляться на десятки языков и не доводить ни один до качества.
                         </p>
                     </motion.div>
 
@@ -259,33 +283,39 @@ export default function Landing() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.08 }}
-                                className="glass-hover rounded-[2rem] p-6"
+                                className="glass-hover rounded-2xl p-6"
                             >
                                 <div
                                     className="mb-5 h-3 rounded-full"
-                                    style={{ background: `linear-gradient(90deg, ${track.accent} 0%, rgba(255,255,255,0.12) 100%)` }}
+                                    style={{
+                                        background: `linear-gradient(90deg, ${track.accent} 0%, rgba(255,255,255,0.08) 100%)`,
+                                    }}
                                 />
-                                <h3 className="mb-2 text-2xl font-bold text-white">{track.name}</h3>
-                                <p className="text-gray-400">
-                                    Трек рассчитан на ежедневный темп и короткий прогресс-цикл: урок, задача,
-                                    сохранённый результат.
+                                <h3 className="font-headline text-2xl font-bold text-on-surface">
+                                    {track.name}
+                                </h3>
+                                <p className="mt-2 text-on-surface-variant">
+                                    Трек рассчитан на ежедневный темп и короткий прогресс-цикл: урок,
+                                    задача, сохранённый результат.
                                 </p>
                             </motion.div>
                         ))}
                     </div>
                 </section>
 
-                <section id="product" className="mx-auto max-w-7xl px-6 py-20">
+                <section id="product" className="mx-auto max-w-7xl px-12 py-20">
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         viewport={{ once: true }}
                         className="mb-14 text-center"
                     >
-                        <h2 className="mb-4 text-4xl font-bold text-white">Что уже есть внутри</h2>
-                        <p className="mx-auto max-w-2xl text-lg text-gray-400">
-                            Эта посадочная страница больше не обещает “10 миллионов пользователей” и “идеальный AI”.
-                            Она показывает то, что реально есть в продукте сейчас и что действительно можно монетизировать.
+                        <h2 className="font-headline text-4xl font-bold text-on-surface">
+                            Что уже есть внутри
+                        </h2>
+                        <p className="mx-auto mt-4 max-w-2xl text-lg text-on-surface-variant">
+                            Показываем то, что реально есть в продукте сейчас и что действительно
+                            можно монетизировать.
                         </p>
                     </motion.div>
 
@@ -300,36 +330,42 @@ export default function Landing() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: index * 0.08 }}
-                                    className="glass-hover rounded-[2rem] p-8"
+                                    className="glass-hover rounded-2xl p-8"
                                 >
-                                    <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-vibe-500 to-vibe-700 shadow-neon">
-                                        <Icon className="h-7 w-7 text-white" />
+                                    <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-dim shadow-neon">
+                                        <Icon className="h-7 w-7 text-black" />
                                     </div>
-                                    <h3 className="mb-3 text-2xl font-bold text-white">{feature.title}</h3>
-                                    <p className="text-lg leading-relaxed text-gray-400">{feature.description}</p>
+                                    <h3 className="font-headline text-2xl font-bold text-on-surface">
+                                        {feature.title}
+                                    </h3>
+                                    <p className="mt-3 text-lg leading-relaxed text-on-surface-variant">
+                                        {feature.description}
+                                    </p>
                                 </motion.div>
                             );
                         })}
                     </div>
                 </section>
 
-                <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-20">
+                <section id="how-it-works" className="mx-auto max-w-7xl px-12 py-20">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.96 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="glass relative overflow-hidden rounded-[2rem] border border-vibe-500/20 p-12 text-center"
+                        className="glass relative overflow-hidden rounded-2xl border border-primary/10 p-12 text-center"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-br from-vibe-600/10 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
                         <div className="relative z-10">
-                            <h2 className="mb-4 text-4xl font-bold text-white">Готов попробовать продукт как пользователь?</h2>
-                            <p className="mx-auto mb-8 max-w-2xl text-lg text-gray-400">
-                                На текущем этапе лучший сценарий не “смотреть маркетинг”, а зайти, выбрать трек и пройти
-                                первый честный цикл обучения.
+                            <h2 className="font-headline text-4xl font-bold text-on-surface">
+                                Готов попробовать продукт?
+                            </h2>
+                            <p className="mx-auto mt-4 mb-8 max-w-2xl text-lg text-on-surface-variant">
+                                На текущем этапе лучший сценарий — зайти, выбрать трек и пройти первый
+                                честный цикл обучения.
                             </p>
                             <Link to="/auth">
                                 <motion.div
-                                    className="btn-neon inline-flex items-center gap-3 rounded-xl px-10 py-5 text-lg"
+                                    className="btn-neon inline-flex items-center gap-3 rounded-full px-10 py-5 text-lg"
                                     whileHover={{ scale: 1.04 }}
                                     whileTap={{ scale: 0.96 }}
                                 >
@@ -341,43 +377,31 @@ export default function Landing() {
                     </motion.div>
                 </section>
 
-                <footer className="mx-auto max-w-7xl border-t border-white/5 px-6 py-10">
+                <footer className="mx-auto max-w-7xl border-t border-white/5 px-12 py-10">
                     <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <div className="mb-3 flex items-center gap-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-vibe-500 to-vibe-700">
-                                    <Code2 className="h-4 w-4 text-white" />
-                                </div>
-                                <span className="text-lg font-bold text-white">VibeStudy</span>
-                            </div>
-                            <p className="max-w-md text-sm text-gray-500">
-                                AI daily coding coach с честным прогрессом, browser practice и фокусом на платный
-                                soft launch, а не на красивые, но пустые обещания.
+                            <span className="font-headline text-lg font-bold text-primary">
+                                VibeStudy
+                            </span>
+                            <p className="mt-2 max-w-md text-sm text-on-surface-variant">
+                                AI daily coding coach с честным прогрессом, browser practice и фокусом
+                                на платный soft launch.
                             </p>
                         </div>
 
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                            <Link to="/pricing" className="transition-colors hover:text-vibe-300">
+                        <div className="flex flex-wrap gap-4 text-sm text-on-surface-variant">
+                            <Link to="/pricing" className="transition-colors hover:text-primary">
                                 Pricing
                             </Link>
-                            <Link to="/privacy" className="transition-colors hover:text-vibe-300">
+                            <Link to="/privacy" className="transition-colors hover:text-primary">
                                 Privacy
                             </Link>
-                            <Link to="/terms" className="transition-colors hover:text-vibe-300">
+                            <Link to="/terms" className="transition-colors hover:text-primary">
                                 Terms
                             </Link>
-                            <Link to="/support" className="transition-colors hover:text-vibe-300">
+                            <Link to="/support" className="transition-colors hover:text-primary">
                                 Support
                             </Link>
-                            <a href="#product" className="transition-colors hover:text-vibe-300">
-                                Продукт
-                            </a>
-                            <a href="#tracks" className="transition-colors hover:text-vibe-300">
-                                Треки
-                            </a>
-                            <a href="#how-it-works" className="transition-colors hover:text-vibe-300">
-                                Сценарий
-                            </a>
                         </div>
                     </div>
                 </footer>

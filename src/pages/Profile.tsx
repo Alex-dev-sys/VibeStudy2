@@ -3,20 +3,21 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
     AlertTriangle,
+    BadgeCheck,
     BookOpen,
     Calendar,
     CheckCircle2,
     ChevronRight,
     Flame,
     RotateCcw,
+    ShieldCheck,
     Sparkles,
     Target,
     Trophy,
-    Wallet,
+    WalletCards,
     Zap,
 } from 'lucide-react';
 import { courses } from '../data/courses';
-import { MANUAL_PAYMENT_NETWORK_LABEL, MANUAL_PAYMENT_WALLET_ADDRESS } from '../lib/billing';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useBillingStore } from '../stores/useBillingStore';
 import { useProgressStore } from '../stores/useProgressStore';
@@ -27,7 +28,7 @@ const courseMeta: Record<string, { accent: string; summary: string }> = {
         summary: 'Good for automation, backend fundamentals, and a strong first track.',
     },
     javascript: {
-        accent: 'from-amber-400 to-orange-500',
+        accent: 'from-cyan-400 to-violet-400',
         summary: 'Best entry point if your main goal is web and interfaces.',
     },
     go: {
@@ -51,6 +52,55 @@ function formatJoinDate(value: string | null | undefined) {
     }).format(new Date(value));
 }
 
+function formatAccessUntil(value: string | null | undefined) {
+    if (!value) {
+        return 'Not active yet';
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+    }).format(new Date(value));
+}
+
+function formatPaymentMoment(value: string | null | undefined) {
+    if (!value) {
+        return 'Not yet';
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(new Date(value));
+}
+
+function formatOrderStatus(status: string | null | undefined) {
+    switch (status) {
+        case 'created':
+            return 'Checkout created';
+        case 'pending':
+            return 'Waiting for payment';
+        case 'paid':
+            return 'Paid';
+        case 'canceled':
+            return 'Canceled';
+        case 'expired':
+            return 'Expired';
+        case 'error':
+            return 'Payment error';
+        case 'refunding':
+            return 'Refunding';
+        case 'refunded':
+            return 'Refunded';
+        default:
+            return 'No recent orders';
+    }
+}
+
 function getInitials(fullName: string | null | undefined) {
     if (!fullName) {
         return 'VS';
@@ -68,7 +118,7 @@ function getInitials(fullName: string | null | undefined) {
 
 export default function Profile() {
     const { user, profile, fetchProfile } = useAuthStore();
-    const { access, entitlements, subscription, paymentRequests, error: billingError } = useBillingStore();
+    const { access, entitlements, subscription, paymentOrders, error: billingError } = useBillingStore();
     const { courseProgress, completedTasks, resetAccountProgress } = useProgressStore();
     const [isResetting, setIsResetting] = useState(false);
     const [confirmReset, setConfirmReset] = useState(false);
@@ -85,7 +135,8 @@ export default function Profile() {
     const hasAnyProgress =
         totalXp > 0 || streak > 0 || completedLessons > 0 || completedTasks.length > 0 || activeTracks > 0;
     const isPro = access.canAccessPaidFeatures;
-    const latestPaymentRequest = paymentRequests[0] ?? null;
+    const latestPaymentOrder = paymentOrders[0] ?? null;
+    const billingState = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('billing');
 
     const trackRows = useMemo(() => {
         return courses
@@ -139,7 +190,7 @@ export default function Profile() {
 
     return (
         <div className="relative min-h-screen">
-            <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.18),_transparent_30%),linear-gradient(180deg,#0b1120_0%,#111827_45%,#0b1120_100%)]" />
+            <div className="fixed inset-0 -z-10 bg-background" />
 
             <div className="mx-auto max-w-7xl px-6 py-8">
                 <motion.section
@@ -147,16 +198,16 @@ export default function Profile() {
                     animate={{ opacity: 1, y: 0 }}
                     className="glass relative mb-8 overflow-hidden rounded-[2rem] p-8"
                 >
-                    <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-vibe-500/15 blur-3xl" />
+                    <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
 
                     <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
                         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-                            <div className="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-gradient-to-br from-vibe-500 to-vibe-700 text-3xl font-bold text-white shadow-neon">
+                            <div className="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-gradient-to-br from-primary to-vibe-700 text-3xl font-bold text-white shadow-neon">
                                 {getInitials(profile?.full_name)}
                             </div>
 
                             <div>
-                                <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-vibe-400/20 bg-vibe-500/10 px-3 py-1 text-sm text-vibe-200">
+                                <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm text-primary">
                                     <Sparkles className="h-4 w-4" />
                                     Profile uses real account data only
                                 </p>
@@ -204,7 +255,7 @@ export default function Profile() {
                             label: 'Total XP',
                             value: totalXp.toLocaleString('en-US'),
                             detail: `${Math.max(0, level * 1000 - totalXp)} XP to next level`,
-                            accent: 'from-yellow-400 to-orange-500',
+        accent: 'from-primary to-secondary',
                         },
                         {
                             icon: Flame,
@@ -218,14 +269,14 @@ export default function Profile() {
                             label: 'Lessons done',
                             value: `${completedLessons}`,
                             detail: `${completedTasks.length} tasks solved`,
-                            accent: 'from-emerald-400 to-green-500',
+        accent: 'from-secondary to-cyan-300',
                         },
                         {
                             icon: Trophy,
                             label: 'Tracks started',
                             value: `${activeTracks}`,
                             detail: hasAnyProgress ? 'saved to the account' : 'new account',
-                            accent: 'from-vibe-400 to-vibe-600',
+accent: 'from-vibe-400 to-vibe-600',
                         },
                     ].map((stat, index) => (
                         <motion.div
@@ -241,7 +292,7 @@ export default function Profile() {
                             </div>
                             <p className="text-sm text-gray-400">{stat.label}</p>
                             <p className="mt-1 text-3xl font-bold text-white">{stat.value}</p>
-                            <p className="mt-1 text-xs text-vibe-300">{stat.detail}</p>
+                            <p className="mt-1 text-xs text-primary">{stat.detail}</p>
                         </motion.div>
                     ))}
                 </motion.section>
@@ -263,7 +314,7 @@ export default function Profile() {
                                 </div>
                                 <Link
                                     to="/lessons"
-                                    className="inline-flex items-center gap-1 text-sm text-vibe-300 transition-colors hover:text-vibe-200"
+                                    className="inline-flex items-center gap-1 text-sm text-primary transition-colors hover:text-primary-dim"
                                 >
                                     Open all <ChevronRight className="h-4 w-4" />
                                 </Link>
@@ -276,7 +327,7 @@ export default function Profile() {
                                         initial={{ opacity: 0, y: 18 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.25 + index * 0.05 }}
-                                        className="rounded-[1.5rem] border border-white/10 bg-dark-800/60 p-5"
+                                        className="rounded-[1.5rem] border border-white/10 bg-surface-container p-5"
                                     >
                                         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                             <div>
@@ -299,7 +350,7 @@ export default function Profile() {
                                             </span>
                                         </div>
 
-                                        <div className="mb-4 h-2 overflow-hidden rounded-full bg-dark-700">
+                                        <div className="mb-4 h-2 overflow-hidden rounded-full bg-surface-container-high">
                                             <div
                                                 className={`h-full rounded-full bg-gradient-to-r ${track.accent}`}
                                                 style={{ width: `${track.progressPercent}%` }}
@@ -307,10 +358,10 @@ export default function Profile() {
                                         </div>
 
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm text-vibe-300">{track.taskCount} tasks saved</span>
+                                            <span className="text-sm text-primary">{track.taskCount} tasks saved</span>
                                             <Link
                                                 to={track.href}
-                                                className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors hover:text-vibe-200"
+                                                className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors hover:text-primary-dim"
                                             >
                                                 {track.started ? 'Continue' : 'Start'}
                                                 <ChevronRight className="h-4 w-4" />
@@ -328,7 +379,7 @@ export default function Profile() {
                             className="glass rounded-[2rem] p-6"
                         >
                             <div className="mb-4 flex items-center gap-2">
-                                <Sparkles className="h-5 w-5 text-vibe-300" />
+                                <Sparkles className="h-5 w-5 text-primary" />
                                 <h2 className="text-xl font-bold text-white">Onboarding</h2>
                             </div>
 
@@ -347,7 +398,7 @@ export default function Profile() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="rounded-[1.5rem] border border-vibe-400/20 bg-vibe-500/10 p-5">
+                                <div className="rounded-[1.5rem] border border-primary/20 bg-primary/10 p-5">
                                     <p className="text-sm text-gray-200">
                                         New accounts start honestly now. No fake achievements, just a clear path: choose a track, open day 1, solve the first task, get the first XP.
                                     </p>
@@ -381,20 +432,26 @@ export default function Profile() {
                             className="glass rounded-[2rem] p-6"
                         >
                             <div className="mb-4 flex items-center gap-2">
-                                <Wallet className="h-5 w-5 text-amber-300" />
+                                <WalletCards className="h-5 w-5 text-primary" />
                                 <h2 className="text-lg font-bold text-white">Plan and payment</h2>
                             </div>
 
                             <div className="space-y-3">
-                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                <div className="rounded-2xl bg-surface-container-high px-4 py-3">
                                     <p className="text-sm text-gray-400">Current plan</p>
                                     <p className="mt-1 font-medium text-white">{isPro ? 'VibeStudy Pro' : 'Free'}</p>
                                 </div>
-                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                <div className="rounded-2xl bg-surface-container-high px-4 py-3">
                                     <p className="text-sm text-gray-400">Status</p>
                                     <p className="mt-1 font-medium text-white">{subscription?.status ?? 'free'}</p>
                                 </div>
-                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                <div className="rounded-2xl bg-surface-container-high px-4 py-3">
+                                    <p className="text-sm text-gray-400">Access until</p>
+                                    <p className="mt-1 font-medium text-white">
+                                        {formatAccessUntil(access.currentPeriodEnd ?? subscription?.current_period_end)}
+                                    </p>
+                                </div>
+                                <div className="rounded-2xl bg-surface-container-high px-4 py-3">
                                     <p className="text-sm text-gray-400">What is unlocked now</p>
                                     <p className="mt-1 font-medium text-white">
                                         {isPro
@@ -405,33 +462,64 @@ export default function Profile() {
                             </div>
 
                             {!isPro ? (
-                                <div className="mt-5 space-y-3 rounded-[1.5rem] border border-amber-300/20 bg-amber-300/10 p-4">
-                                    <p className="text-sm text-amber-50">
-                                        Upgrade uses a direct wallet payment now. Open the pricing page, send the exact USDT amount, and submit the transaction hash for review.
+                                <div className="mt-5 space-y-4 rounded-[1.75rem] border border-primary/20 bg-primary/10 p-4">
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                                        <BadgeCheck className="h-3.5 w-3.5" />
+                                        Binance Pay checkout
+                                    </div>
+                                    <p className="text-sm text-slate-100">
+                                        Upgrade now uses a hosted-first Binance Pay flow. It is a one-time payment with a fixed access window and no auto-renew.
                                     </p>
-                                    <Link
-                                        to="/pricing"
-                                        className="inline-flex rounded-2xl border border-amber-200/25 bg-amber-300/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-300/25"
-                                    >
-                                        Open payment page
-                                    </Link>
-
-                                    {latestPaymentRequest ? (
-                                        <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white">
-                                            <p className="font-semibold">Latest payment request</p>
-                                            <p className="mt-2">Status: {latestPaymentRequest.status}</p>
-                                            <p className="mt-2">Plan: {latestPaymentRequest.plan_code}</p>
-                                            <p className="mt-2 break-all text-amber-100">
-                                                Tx hash: {latestPaymentRequest.tx_hash}
-                                            </p>
+                                    {billingState === 'success' ? (
+                                        <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-50">
+                                            Payment flow completed. If Binance confirms the order, Pro access will appear here automatically.
                                         </div>
                                     ) : null}
-
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                                        <p className="font-semibold text-white">Wallet</p>
-                                        <p className="mt-2 break-all">{MANUAL_PAYMENT_WALLET_ADDRESS}</p>
-                                        <p className="mt-2 text-slate-300">Network: {MANUAL_PAYMENT_NETWORK_LABEL}</p>
+                                    <div className="space-y-3 rounded-[1.5rem] border border-white/10 bg-black/15 p-4 text-sm text-slate-100">
+                                        <div className="flex items-start gap-3">
+                                            <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                                            <span>Secure transaction via Binance</span>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                                            <span>Instant access after confirmation</span>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                                            <span>No auto-renew. You buy 30 or 90 days and keep control of the next step.</span>
+                                        </div>
                                     </div>
+                                    <Link
+                                        to="/pricing"
+                                        className="inline-flex rounded-2xl border border-primary/20 bg-primary/12 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary/18"
+                                    >
+                                        Open Binance Pay pricing
+                                    </Link>
+
+                                    {latestPaymentOrder ? (
+                                        <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white">
+                                            <p className="font-semibold">Recent checkout activity</p>
+                                            <p className="mt-2">Status: {formatOrderStatus(latestPaymentOrder.status)}</p>
+                                            <p className="mt-2">Plan: {latestPaymentOrder.plan_code}</p>
+                                            <p className="mt-2">Created: {formatPaymentMoment(latestPaymentOrder.created_at)}</p>
+                                            <p className="mt-2">Paid: {formatPaymentMoment(latestPaymentOrder.paid_at)}</p>
+                                            <p className="mt-2 break-all text-primary">
+                                                Reference: {latestPaymentOrder.merchant_trade_no}
+                                            </p>
+                                            {latestPaymentOrder.checkout_url &&
+                                            (latestPaymentOrder.status === 'created' ||
+                                                latestPaymentOrder.status === 'pending') ? (
+                                                <a
+                                                    href={latestPaymentOrder.checkout_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="mt-3 inline-flex rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                                                >
+                                                    Reopen checkout
+                                                </a>
+                                            ) : null}
+                                        </div>
+                                    ) : null}
 
                                     {billingError ? (
                                         <div className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-100">
@@ -440,13 +528,18 @@ export default function Profile() {
                                     ) : null}
                                 </div>
                             ) : (
-                                <div className="mt-5 space-y-3 rounded-[1.5rem] border border-emerald-300/20 bg-emerald-400/10 p-4 text-sm text-emerald-50">
+                                <div className="mt-5 space-y-3 rounded-[1.5rem] border border-secondary/20 bg-secondary/10 p-4 text-sm text-slate-100">
                                     <p>
                                         Paid access is active. Free-tier limits are removed and the account can use the full learning route.
                                     </p>
-                                    <p className="text-emerald-100">
-                                        Provider: {subscription?.provider ?? 'manual'} • Status: {subscription?.status ?? 'active'}
+                                    <p className="text-cyan-100">
+                                        Provider: {subscription?.provider ?? 'binance'} • Status: {subscription?.status ?? 'active'}
                                     </p>
+                                    {latestPaymentOrder ? (
+                                        <p className="text-slate-200">
+                                            Latest order: {formatOrderStatus(latestPaymentOrder.status)} • Paid {formatPaymentMoment(latestPaymentOrder.paid_at)}
+                                        </p>
+                                    ) : null}
                                     {billingError ? (
                                         <div className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-100">
                                             {billingError}
@@ -464,17 +557,17 @@ export default function Profile() {
                         >
                             <h2 className="mb-4 text-lg font-bold text-white">Account state</h2>
                             <div className="space-y-3">
-                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                <div className="rounded-2xl bg-surface-container-high px-4 py-3">
                                     <p className="text-sm text-gray-400">Email</p>
                                     <p className="mt-1 font-medium text-white">{user?.email || 'Not found'}</p>
                                 </div>
-                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                <div className="rounded-2xl bg-surface-container-high px-4 py-3">
                                     <p className="text-sm text-gray-400">Latest visible result</p>
                                     <p className="mt-1 font-medium text-white">
                                         {hasAnyProgress ? `${completedLessons} lessons and ${completedTasks.length} tasks` : 'No visible activity yet'}
                                     </p>
                                 </div>
-                                <div className="rounded-2xl bg-dark-700/60 px-4 py-3">
+                                <div className="rounded-2xl bg-surface-container-high px-4 py-3">
                                     <p className="text-sm text-gray-400">Account mode</p>
                                     <p className="mt-1 font-medium text-white">{hasAnyProgress ? 'Active' : 'New'}</p>
                                 </div>
@@ -529,7 +622,7 @@ export default function Profile() {
                             className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5"
                         >
                             <p className="text-sm font-medium text-white">Service pages</p>
-                            <div className="mt-3 flex flex-wrap gap-3 text-sm text-vibe-200">
+                            <div className="mt-3 flex flex-wrap gap-3 text-sm text-primary">
                                 <Link to="/pricing" className="transition-colors hover:text-white">
                                     Pricing
                                 </Link>

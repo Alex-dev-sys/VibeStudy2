@@ -1,4 +1,4 @@
-export const BILLING_PROVIDERS = ['cryptomus', 'stripe', 'yookassa', 'manual'] as const;
+export const BILLING_PROVIDERS = ['binance', 'cryptomus', 'stripe', 'yookassa', 'manual'] as const;
 export type BillingProvider = (typeof BILLING_PROVIDERS)[number];
 
 export const BILLING_PLAN_CODES = ['free', 'pro_monthly', 'pro_three_month'] as const;
@@ -31,6 +31,18 @@ export type BillingFeatureCode = (typeof BILLING_FEATURE_CODES)[number];
 
 export const MANUAL_PAYMENT_REQUEST_STATUSES = ['pending', 'approved', 'rejected'] as const;
 export type ManualPaymentRequestStatus = (typeof MANUAL_PAYMENT_REQUEST_STATUSES)[number];
+
+export const PAYMENT_ORDER_STATUSES = [
+    'created',
+    'pending',
+    'paid',
+    'canceled',
+    'expired',
+    'error',
+    'refunding',
+    'refunded',
+] as const;
+export type PaymentOrderStatus = (typeof PAYMENT_ORDER_STATUSES)[number];
 
 export interface SubscriptionAccessState {
     planCode: BillingPlanCode;

@@ -5,6 +5,7 @@ import type {
   BillingProvider,
   BillingSubscriptionStatus,
   ManualPaymentRequestStatus,
+  PaymentOrderStatus,
 } from './billing.types';
 
 export type JsonObject = Record<string, unknown>;
@@ -126,6 +127,29 @@ export interface FeatureUsageRecord {
   updated_at: string;
 }
 
+export interface PaymentOrderRecord {
+  id: string;
+  user_id: string;
+  provider: BillingProvider;
+  plan_code: Exclude<BillingPlanCode, 'free'>;
+  status: PaymentOrderStatus;
+  merchant_trade_no: string;
+  provider_order_id: string | null;
+  provider_transaction_id: string | null;
+  amount: string;
+  currency: string;
+  checkout_url: string | null;
+  deeplink: string | null;
+  universal_url: string | null;
+  qr_code_link: string | null;
+  order_expires_at: string | null;
+  paid_at: string | null;
+  last_checked_at: string | null;
+  metadata: JsonObject;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ManualPaymentRequestRecord {
   id: string;
   user_id: string;
@@ -174,6 +198,11 @@ export interface BillingEventInsert extends Omit<BillingEventRecord, 'id' | 'cre
 
 export interface FeatureUsageInsert
   extends Omit<FeatureUsageRecord, 'id' | 'created_at' | 'updated_at'> {
+  id?: string;
+}
+
+export interface PaymentOrderInsert
+  extends Omit<PaymentOrderRecord, 'id' | 'created_at' | 'updated_at'> {
   id?: string;
 }
 
@@ -229,6 +258,11 @@ export interface Database {
         Row: FeatureUsageRecord;
         Insert: FeatureUsageInsert;
         Update: Partial<FeatureUsageRecord>;
+      };
+      payment_orders: {
+        Row: PaymentOrderRecord;
+        Insert: PaymentOrderInsert;
+        Update: Partial<PaymentOrderRecord>;
       };
       manual_payment_requests: {
         Row: ManualPaymentRequestRecord;

@@ -1,19 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-    Trophy,
-    Flame,
-    Clock,
-    Zap,
+    ArrowRight,
+    Clock3,
     Filter,
-    Star,
+    Flame,
     Lock,
-    CheckCircle2,
-    ChevronRight,
-    Timer,
+    Medal,
+    ShieldCheck,
+    Swords,
+    Trophy,
     Users,
-    Target
+    Zap,
 } from 'lucide-react';
 
 const languages = ['All', 'Python', 'JavaScript', 'Go', 'Rust', 'Java', 'C++'];
@@ -21,8 +20,8 @@ const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
 
 const featuredChallenge = {
     id: 'featured-1',
-    title: 'Build a Real-Time Chat System',
-    description: 'Design and implement a scalable WebSocket-based chat application',
+    title: 'Real-Time Chat Architecture',
+    description: 'Model a production-grade chat system with pub/sub, sockets, and graceful load distribution.',
     difficulty: 'Hard',
     language: 'Python',
     xp: 500,
@@ -44,293 +43,342 @@ const challenges = [
 ];
 
 const leaderboard = [
-    { rank: 1, name: 'CodeMaster', xp: 45000, avatar: '👨‍💻' },
-    { rank: 2, name: 'PyNinja', xp: 42500, avatar: '🥷' },
-    { rank: 3, name: 'RustLord', xp: 38900, avatar: '🦀' },
-    { rank: 4, name: 'JSWizard', xp: 35200, avatar: '⚡' },
-    { rank: 5, name: 'GoGuru', xp: 32100, avatar: '🔷' },
-    { rank: 6, name: 'AlgoKing', xp: 29800, avatar: '👑' },
-    { rank: 7, name: 'DataDev', xp: 27500, avatar: '📊' },
-    { rank: 8, name: 'ByteHero', xp: 25200, avatar: '🦸' },
+    { rank: 1, name: 'CodeMaster', xp: 45000 },
+    { rank: 2, name: 'PyNinja', xp: 42500 },
+    { rank: 3, name: 'RustLord', xp: 38900 },
+    { rank: 4, name: 'JSWizard', xp: 35200 },
+    { rank: 5, name: 'GoGuru', xp: 32100 },
+    { rank: 6, name: 'AlgoKing', xp: 29800 },
 ];
 
-const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-        case 'Easy': return 'text-green-400 bg-green-500/20';
-        case 'Medium': return 'text-orange-400 bg-orange-500/20';
-        case 'Hard': return 'text-red-400 bg-red-500/20';
-        default: return 'text-gray-400 bg-gray-500/20';
-    }
+const languageAccent: Record<string, string> = {
+    Python: 'from-sky-400 to-cyan-400',
+    JavaScript: 'from-cyan-300 to-violet-400',
+    Go: 'from-cyan-300 to-teal-400',
+    Rust: 'from-orange-300 to-rose-400',
+    Java: 'from-red-300 to-orange-400',
+    'C++': 'from-violet-300 to-fuchsia-400',
 };
 
-const getLanguageIcon = (lang: string) => {
-    const icons: Record<string, string> = {
-        Python: '🐍',
-        JavaScript: '⚡',
-        Go: '🔷',
-        Rust: '🦀',
-        Java: '☕',
-        'C++': '⚙️',
-    };
-    return icons[lang] || '💻';
+const difficultyStyles: Record<string, string> = {
+    Easy: 'border-secondary/20 bg-secondary/10 text-cyan-100',
+    Medium: 'border-primary/20 bg-primary/10 text-primary',
+    Hard: 'border-rose-400/20 bg-rose-500/10 text-rose-200',
 };
+
+function getInitials(value: string) {
+    return value
+        .split(/[^A-Za-z0-9]+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() ?? '')
+        .join('') || 'VS';
+}
 
 export default function Challenges() {
     const [selectedLanguage, setSelectedLanguage] = useState('All');
     const [selectedDifficulty, setSelectedDifficulty] = useState('All');
 
-    const filteredChallenges = challenges.filter((c) => {
-        const langMatch = selectedLanguage === 'All' || c.language === selectedLanguage;
-        const diffMatch = selectedDifficulty === 'All' || c.difficulty === selectedDifficulty;
-        return langMatch && diffMatch;
-    });
+    const filteredChallenges = useMemo(() => {
+        return challenges.filter((challenge) => {
+            const langMatch = selectedLanguage === 'All' || challenge.language === selectedLanguage;
+            const diffMatch = selectedDifficulty === 'All' || challenge.difficulty === selectedDifficulty;
+            return langMatch && diffMatch;
+        });
+    }, [selectedDifficulty, selectedLanguage]);
 
     return (
-        <div className="min-h-screen relative">
-            <div className="fixed inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900 -z-10" />
-
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
+        <div className="min-h-screen px-8 py-8">
+            <div className="mx-auto max-w-7xl">
+                <motion.section
+                    initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between mb-8"
+                    className="surface-premium relative overflow-hidden p-8 lg:p-10"
                 >
-                    <div>
-                        <h1 className="text-3xl font-bold text-white mb-1">Daily Challenges</h1>
-                        <p className="text-gray-400">Sharpen your skills with AI-generated problems</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 px-4 py-2 glass rounded-xl">
-                            <Trophy className="w-5 h-5 text-yellow-500" />
-                            <span className="text-white font-medium">Rank #1,247</span>
+                    <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-primary/10 blur-[120px]" />
+                    <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-cyan-400/8 blur-[120px]" />
+                    <div className="relative z-10 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+                        <div>
+                            <div className="eyebrow">
+                                <Swords className="h-3.5 w-3.5" />
+                                Competitive layer
+                            </div>
+                            <h1 className="mt-5 max-w-3xl font-headline text-4xl font-bold tracking-tight text-white lg:text-6xl">
+                                Challenge mode with more signal and less arcade noise.
+                            </h1>
+                            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 lg:text-lg">
+                                Featured problems, sharper filtering, clearer reward framing, and a cleaner route into the
+                                Playground for actual solving.
+                            </p>
+
+                            <div className="mt-8 flex flex-wrap gap-3">
+                                <Link to={`/playground?challenge=${featuredChallenge.id}`} className="btn-neon inline-flex items-center gap-2 px-6 py-3 text-sm">
+                                    Start featured challenge
+                                    <ArrowRight className="h-4 w-4" />
+                                </Link>
+                                <Link to="/analytics" className="btn-neon-outline inline-flex items-center gap-2 px-6 py-3 text-sm">
+                                    Open rankings insight
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                </motion.div>
 
-                <div className="grid lg:grid-cols-4 gap-6">
-                    {/* Main Content */}
-                    <div className="lg:col-span-3 space-y-6">
-                        {/* Featured Challenge */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="glass p-8 relative overflow-hidden border border-vibe-500/30"
-                        >
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-vibe-500/20 rounded-full blur-3xl" />
-                            <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-vibe-600/20 rounded-full blur-3xl" />
-
-                            <div className="relative z-10">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Flame className="w-5 h-5 text-orange-500" />
-                                    <span className="text-orange-400 font-medium">Featured Challenge</span>
-                                    <span className="ml-auto flex items-center gap-1 text-vibe-400">
-                                        <Timer className="w-4 h-4" />
-                                        Ends in {featuredChallenge.endsIn}
-                                    </span>
-                                </div>
-
-                                <h2 className="text-3xl font-bold text-white mb-3">{featuredChallenge.title}</h2>
-                                <p className="text-gray-400 mb-6 max-w-2xl">{featuredChallenge.description}</p>
-
-                                <div className="flex flex-wrap items-center gap-4 mb-6">
-                                    <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${getDifficultyColor(featuredChallenge.difficulty)}`}>
-                                        {featuredChallenge.difficulty}
-                                    </span>
-                                    <span className="flex items-center gap-2 text-gray-300">
-                                        {getLanguageIcon(featuredChallenge.language)} {featuredChallenge.language}
-                                    </span>
-                                    <span className="flex items-center gap-1 text-gray-400">
-                                        <Clock className="w-4 h-4" /> {featuredChallenge.timeLimit}
-                                    </span>
-                                    <span className="flex items-center gap-1 text-gray-400">
-                                        <Users className="w-4 h-4" /> {featuredChallenge.participants.toLocaleString()} solving
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center gap-4">
-                                    <Link to={`/playground?challenge=${featuredChallenge.id}`}>
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            className="btn-neon px-8 py-3 text-lg flex items-center gap-2"
-                                        >
-                                            <Target className="w-5 h-5" />
-                                            Start Challenge
-                                        </motion.button>
-                                    </Link>
-                                    <div className="flex items-center gap-2 text-yellow-500">
-                                        <Zap className="w-6 h-6" />
-                                        <span className="text-2xl font-bold">{featuredChallenge.xp}</span>
-                                        <span className="text-yellow-400/60">XP</span>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="metric-chip">
+                                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Your current rank</p>
+                                <p className="mt-3 text-3xl font-bold text-white">#1,247</p>
+                                <p className="mt-2 text-sm text-slate-300">Enough activity to enter the board, still plenty of room to climb.</p>
+                            </div>
+                            <div className="metric-chip">
+                                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Tonight&apos;s prize</p>
+                                <p className="mt-3 text-3xl font-bold text-white">{featuredChallenge.xp} XP</p>
+                                <p className="mt-2 text-sm text-slate-300">Featured challenge payout for the current window.</p>
+                            </div>
+                            <div className="metric-chip sm:col-span-2">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Featured challenge timing</p>
+                                        <p className="mt-3 text-xl font-semibold text-white">Ends in {featuredChallenge.endsIn}</p>
+                                        <p className="mt-2 text-sm text-slate-300">
+                                            Built for people who want a sharper loop than passive lesson reading.
+                                        </p>
+                                    </div>
+                                    <div className="hidden h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] lg:flex">
+                                        <Flame className="h-6 w-6 text-primary" />
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
+                    </div>
+                </motion.section>
 
-                        {/* Filters */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                <div className="mt-8 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                    <div className="space-y-6">
+                        <motion.section
+                            initial={{ opacity: 0, y: 18 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="flex flex-wrap gap-4"
+                            transition={{ delay: 0.06 }}
+                            className="surface-premium-soft p-6"
                         >
-                            <div className="flex items-center gap-2">
-                                <Filter className="w-4 h-4 text-gray-400" />
-                                <span className="text-gray-400 text-sm">Filter:</span>
+                            <div className="mb-4 flex items-center justify-between gap-4">
+                                <div>
+                                    <div className="eyebrow">Featured challenge</div>
+                                    <h2 className="mt-4 text-3xl font-bold text-white">{featuredChallenge.title}</h2>
+                                </div>
+                                <span className="rounded-full border border-primary/18 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                                    {featuredChallenge.endsIn} left
+                                </span>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
-                                {languages.map((lang) => (
-                                    <motion.button
-                                        key={lang}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => setSelectedLanguage(lang)}
-                                        className={`px-4 py-2 rounded-xl text-sm transition-all ${selectedLanguage === lang
-                                                ? 'bg-vibe-500 text-white shadow-neon'
-                                                : 'glass text-gray-400 hover:text-white'
+                            <p className="max-w-3xl text-sm leading-7 text-slate-300">{featuredChallenge.description}</p>
+
+                            <div className="mt-6 flex flex-wrap gap-3">
+                                <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${difficultyStyles[featuredChallenge.difficulty]}`}>
+                                    {featuredChallenge.difficulty}
+                                </span>
+                                <span className={`rounded-full bg-gradient-to-r px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-black ${languageAccent[featuredChallenge.language]}`}>
+                                    {featuredChallenge.language}
+                                </span>
+                                <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-300">
+                                    {featuredChallenge.timeLimit}
+                                </span>
+                                <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-300">
+                                    {featuredChallenge.participants.toLocaleString('en-US')} solvers
+                                </span>
+                            </div>
+
+                            <div className="mt-6 flex flex-wrap items-center gap-4">
+                                <Link to={`/playground?challenge=${featuredChallenge.id}`} className="btn-neon inline-flex items-center gap-2 px-5 py-3 text-sm">
+                                    Open in Playground
+                                    <ArrowRight className="h-4 w-4" />
+                                </Link>
+                                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-200">
+                                    <Zap className="h-4 w-4 text-primary" />
+                                    {featuredChallenge.xp} XP reward
+                                </div>
+                            </div>
+                        </motion.section>
+
+                        <motion.section
+                            initial={{ opacity: 0, y: 18 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.12 }}
+                            className="surface-premium-soft p-6"
+                        >
+                            <div className="mb-5 flex flex-wrap items-center gap-3">
+                                <div className="eyebrow">
+                                    <Filter className="h-3.5 w-3.5" />
+                                    Filtering
+                                </div>
+                                <p className="text-sm text-slate-400">Cut through the board and go straight to the right challenge profile.</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex flex-wrap gap-2">
+                                    {languages.map((lang) => (
+                                        <button
+                                            key={lang}
+                                            type="button"
+                                            onClick={() => setSelectedLanguage(lang)}
+                                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                                                selectedLanguage === lang
+                                                    ? 'border border-primary/20 bg-primary/10 text-white'
+                                                    : 'border border-white/10 bg-white/[0.03] text-slate-300 hover:text-white'
                                             }`}
-                                    >
-                                        {lang !== 'All' && <span className="mr-1">{getLanguageIcon(lang)}</span>}
-                                        {lang}
-                                    </motion.button>
-                                ))}
-                            </div>
-
-                            <div className="flex gap-2">
-                                {difficulties.map((diff) => (
-                                    <motion.button
-                                        key={diff}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => setSelectedDifficulty(diff)}
-                                        className={`px-4 py-2 rounded-xl text-sm transition-all ${selectedDifficulty === diff
-                                                ? 'bg-vibe-500 text-white shadow-neon'
-                                                : 'glass text-gray-400 hover:text-white'
+                                        >
+                                            {lang}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {difficulties.map((difficulty) => (
+                                        <button
+                                            key={difficulty}
+                                            type="button"
+                                            onClick={() => setSelectedDifficulty(difficulty)}
+                                            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                                                selectedDifficulty === difficulty
+                                                    ? 'border border-cyan-300/20 bg-cyan-300/10 text-white'
+                                                    : 'border border-white/10 bg-white/[0.03] text-slate-300 hover:text-white'
                                             }`}
-                                    >
-                                        {diff}
-                                    </motion.button>
-                                ))}
+                                        >
+                                            {difficulty}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </motion.div>
+                        </motion.section>
 
-                        {/* Challenges Grid */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+                        <motion.section
+                            initial={{ opacity: 0, y: 18 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.16 }}
+                            className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
                         >
                             {filteredChallenges.map((challenge, index) => (
                                 <motion.div
                                     key={challenge.id}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0, y: 18 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 + index * 0.05 }}
-                                    whileHover={{ y: -4 }}
-                                    className={`glass-hover p-5 relative ${challenge.status === 'locked' ? 'opacity-60' : ''
-                                        }`}
+                                    transition={{ delay: 0.2 + index * 0.03 }}
+                                    className="surface-premium-soft p-5"
                                 >
-                                    {challenge.status === 'completed' && (
-                                        <div className="absolute top-4 right-4">
-                                            <CheckCircle2 className="w-5 h-5 text-green-400" />
+                                    <div className="mb-4 flex items-start justify-between gap-3">
+                                        <div className={`inline-flex rounded-full bg-gradient-to-r px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-black ${languageAccent[challenge.language]}`}>
+                                            {challenge.language}
                                         </div>
-                                    )}
-                                    {challenge.status === 'locked' && (
-                                        <div className="absolute top-4 right-4">
-                                            <Lock className="w-5 h-5 text-gray-500" />
-                                        </div>
-                                    )}
+                                        {challenge.status === 'locked' ? (
+                                            <Lock className="h-4.5 w-4.5 text-slate-500" />
+                                        ) : challenge.status === 'completed' ? (
+                                                <ShieldCheck className="h-4.5 w-4.5 text-secondary" />
+                                        ) : null}
+                                    </div>
 
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-xl">{getLanguageIcon(challenge.language)}</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-xs ${getDifficultyColor(challenge.difficulty)}`}>
+                                    <h3 className="text-lg font-semibold text-white">{challenge.title}</h3>
+                                    <div className="mt-4 flex flex-wrap gap-2">
+                                        <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${difficultyStyles[challenge.difficulty]}`}>
                                             {challenge.difficulty}
                                         </span>
-                                    </div>
-
-                                    <h3 className="text-lg font-semibold text-white mb-2">{challenge.title}</h3>
-
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-400 flex items-center gap-1">
-                                            <Clock className="w-3 h-3" /> {challenge.time}
-                                        </span>
-                                        <span className="text-yellow-500 flex items-center gap-1">
-                                            <Zap className="w-3 h-3" /> {challenge.xp} XP
+                                        <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-300">
+                                            {challenge.time}
                                         </span>
                                     </div>
 
-                                    {challenge.status === 'available' && (
-                                        <Link to={`/playground?challenge=${challenge.id}`}>
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                className="btn-neon-outline w-full mt-4 py-2 text-sm"
-                                            >
-                                                Start
-                                            </motion.button>
+                                    <div className="mt-4 flex items-center justify-between text-sm text-slate-300">
+                                        <span className="inline-flex items-center gap-2">
+                                            <Clock3 className="h-4 w-4 text-slate-500" />
+                                            {challenge.time}
+                                        </span>
+                                        <span className="inline-flex items-center gap-2 text-primary">
+                                            <Zap className="h-4 w-4" />
+                                            {challenge.xp} XP
+                                        </span>
+                                    </div>
+
+                                    {challenge.status === 'available' ? (
+                                        <Link to={`/playground?challenge=${challenge.id}`} className="btn-neon-outline mt-5 inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-sm">
+                                            Start challenge
+                                            <ArrowRight className="h-4 w-4" />
                                         </Link>
+                                    ) : (
+                                        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center text-sm text-slate-400">
+                                            {challenge.status === 'completed' ? 'Already completed' : 'Unlock through more progress'}
+                                        </div>
                                     )}
                                 </motion.div>
                             ))}
-                        </motion.div>
+                        </motion.section>
                     </div>
 
-                    {/* Leaderboard Sidebar */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="glass p-6 h-fit sticky top-6"
-                    >
-                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                            <Trophy className="w-5 h-5 text-yellow-500" />
-                            Global Leaderboard
-                        </h3>
-
-                        <div className="space-y-3">
-                            {leaderboard.map((user, index) => (
-                                <motion.div
-                                    key={user.name}
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.4 + index * 0.05 }}
-                                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${index < 3 ? 'bg-vibe-500/10' : 'hover:bg-dark-700/50'
-                                        }`}
-                                >
-                                    <span className={`w-6 text-center font-bold ${index === 0 ? 'text-yellow-400' :
-                                            index === 1 ? 'text-gray-300' :
-                                                index === 2 ? 'text-orange-400' :
-                                                    'text-gray-500'
-                                        }`}>
-                                        #{user.rank}
-                                    </span>
-                                    <span className="text-xl">{user.avatar}</span>
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium text-white">{user.name}</p>
-                                        <p className="text-xs text-gray-500">{user.xp.toLocaleString()} XP</p>
+                    <div className="space-y-6">
+                        <motion.section
+                            initial={{ opacity: 0, x: 18 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="surface-premium-soft p-6"
+                        >
+                            <div className="eyebrow">
+                                <Trophy className="h-3.5 w-3.5" />
+                                Live board
+                            </div>
+                            <h2 className="mt-4 text-xl font-bold text-white">Global leaderboard</h2>
+                            <div className="mt-5 space-y-3">
+                                {leaderboard.map((entry, index) => (
+                                    <div key={entry.name} className="flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-white/[0.03] px-4 py-3">
+                                        <div className="w-10 text-sm font-semibold text-slate-400">#{entry.rank}</div>
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.06] text-sm font-semibold text-white">
+                                            {getInitials(entry.name)}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate font-semibold text-white">{entry.name}</p>
+                                            <p className="text-xs text-slate-400">{entry.xp.toLocaleString('en-US')} XP</p>
+                                        </div>
+                                        {index < 3 ? <Medal className="h-4.5 w-4.5 text-primary" /> : null}
                                     </div>
-                                    {index < 3 && (
-                                        <Star className={`w-4 h-4 ${index === 0 ? 'text-yellow-400' :
-                                                index === 1 ? 'text-gray-300' :
-                                                    'text-orange-400'
-                                            }`} />
-                                    )}
-                                </motion.div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                            <Link to="/analytics" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition hover:text-white">
+                                Open full analytics
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </motion.section>
 
-                        <Link to="/analytics">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                className="w-full mt-4 py-2 text-sm text-vibe-400 hover:text-vibe-300 flex items-center justify-center gap-1"
-                            >
-                                View Full Rankings <ChevronRight className="w-4 h-4" />
-                            </motion.button>
-                        </Link>
-                    </motion.div>
+                        <motion.section
+                            initial={{ opacity: 0, x: 18 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className="surface-premium-soft p-6"
+                        >
+                            <div className="eyebrow">Why this screen exists</div>
+                            <h2 className="mt-4 text-xl font-bold text-white">Challenges should feel sharper than lessons.</h2>
+                            <div className="mt-5 space-y-4 text-sm leading-6 text-slate-300">
+                                <p>
+                                    Lessons build consistency. Challenges build edge. This screen now frames urgency, reward,
+                                    competitive context, and the path into solving more clearly.
+                                </p>
+                                <p>
+                                    The result is a stronger internal product hierarchy: Home for direction, Lessons for steady
+                                    progress, Challenges for pressure, and Playground for execution.
+                                </p>
+                            </div>
+                        </motion.section>
+
+                        <motion.section
+                            initial={{ opacity: 0, x: 18 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="surface-premium-soft p-6"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                                    <Users className="h-5 w-5 text-cyan-300" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Competitive signal</p>
+                                    <p className="text-sm text-slate-400">Featured and filtered challenge surfaces are now easier to scan and trust.</p>
+                                </div>
+                            </div>
+                        </motion.section>
+                    </div>
                 </div>
             </div>
         </div>
