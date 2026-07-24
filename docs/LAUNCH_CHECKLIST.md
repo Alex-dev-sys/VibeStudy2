@@ -94,6 +94,8 @@ Go only if all are true:
 - [ ] No critical AI generation failures in the last manual check.
 - [ ] Billing checkout and webhook were verified on the current environment.
 - [ ] Smoke tests are green.
+- [ ] For VPS deploy, repository variable `VPS_DEPLOY_ENABLED=true` and secrets
+  `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` are configured.
 - [ ] Support owner knows where issues will arrive.
 - [ ] Dashboard for activation, paywall, and subscription metrics is ready.
 
