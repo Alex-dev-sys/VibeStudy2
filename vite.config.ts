@@ -13,7 +13,9 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-three': ['three', '@react-three/fiber', '@react-three/drei'],
-          'vendor-ui': ['framer-motion', 'recharts', '@monaco-editor/react'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-charts': ['recharts'],
+          'vendor-monaco': ['@monaco-editor/react', 'monaco-editor'],
           'vendor-radix': [
             '@radix-ui/react-avatar',
             '@radix-ui/react-dropdown-menu',

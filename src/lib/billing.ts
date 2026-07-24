@@ -74,7 +74,7 @@ export const CRYPTO_PLAN_DEFINITIONS: CryptoPlanDefinition[] = [
     },
 ];
 
-const PAID_ACCESS_STATUSES: BillingSubscriptionStatus[] = ['active', 'trialing', 'past_due'];
+const PAID_ACCESS_STATUSES: BillingSubscriptionStatus[] = ['active', 'trialing'];
 
 function isMissingBillingTableError(error: { message?: string } | null) {
     const message = error?.message?.toLowerCase() ?? '';
@@ -89,7 +89,7 @@ function isMissingBillingTableError(error: { message?: string } | null) {
 
 function hasUnexpiredWindow(currentPeriodEnd: string | null) {
     if (!currentPeriodEnd) {
-        return true;
+        return false;
     }
 
     return new Date(currentPeriodEnd).getTime() > Date.now();
@@ -121,6 +121,7 @@ export function deriveAccessState(subscription: SubscriptionRecord | null): Subs
 }
 
 export async function fetchBillingOverview(userId: string): Promise<BillingOverview> {
+    const now = new Date().toISOString();
     const [subscriptionResult, entitlementsResult, usageResult, paymentOrdersResult] = await Promise.all([
         supabase
             .from('subscriptions')
@@ -132,6 +133,9 @@ export async function fetchBillingOverview(userId: string): Promise<BillingOverv
             .from('entitlements')
             .select('*')
             .eq('user_id', userId)
+            .eq('active', true)
+            .lte('starts_at', now)
+            .or(`ends_at.is.null,ends_at.gt.${now}`)
             .order('created_at', { ascending: false }),
         supabase
             .from('feature_usage')
@@ -215,7 +219,17 @@ export function hasEntitlement(
     entitlements: EntitlementRecord[],
     entitlementCode: BillingEntitlementCode
 ) {
-    return entitlements.some((entitlement) => entitlement.entitlement_code === entitlementCode && entitlement.active);
+    const now = Date.now();
+    return entitlements.some((entitlement) => {
+        const startsAt = new Date(entitlement.starts_at).getTime();
+        const endsAt = entitlement.ends_at ? new Date(entitlement.ends_at).getTime() : Number.POSITIVE_INFINITY;
+        return (
+            entitlement.entitlement_code === entitlementCode &&
+            entitlement.active &&
+            startsAt <= now &&
+            endsAt > now
+        );
+    });
 }
 
 export function getFeatureUsageCount(

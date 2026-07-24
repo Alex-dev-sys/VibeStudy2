@@ -1,104 +1,79 @@
-# 🚀 VibeStudy 2.0
+# VibeStudy 2.0
 
-![VibeStudy Banner](https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop)
+VibeStudy — учебная платформа для практического изучения программирования: карьерные треки, ежедневные уроки, браузерный редактор, AI-подсказки и проверка решений.
 
-<div align="center">
+## Что входит
 
-[![React](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-7.2.4-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1.18-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-Enabled-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+- React 19, TypeScript, Vite и Tailwind CSS.
+- Supabase Auth, Postgres/RLS и Edge Functions.
+- Серверная генерация уроков через OpenAI: ключ провайдера не попадает в браузер.
+- Бесплатный тариф: один выбранный трек, первые 3 дня и 3 AI-подсказки в день.
+- Pro на 30 или 90 дней через одноразовую оплату Binance Pay без автопродления.
+- Атомарные серверные лимиты, проверка срока подписки и кэш уроков.
 
-**Платформа IT-образования будущего с поддержкой ИИ.**
-</div>
+## Локальный запуск
 
----
+Требования: Node.js 20+, npm и Supabase CLI (CLI можно запускать через `npx`).
 
-## ✨ Обзор
+```bash
+git clone https://github.com/Alex-dev-sys/VibeStudy2.git
+cd VibeStudy2
+npm ci
+cp .env.example .env
+npm run dev
+```
 
-**VibeStudy** — это образовательная платформа нового поколения, созданная для ускоренного погружения в мир IT. Сочетая передовые технологии ИИ-репетиторства с геймифицированной средой и практикой написания кода, VibeStudy делает освоение сложных концепций программирования интуитивным и увлекательным.
+В `.env` укажите публичные `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY`. Секреты OpenAI и Binance Pay хранятся только в Supabase Edge Functions.
 
-### 🌟 Ключевые Возможности
+## Проверки
 
--   **🤖 ИИ-Ассистент**: Персональный репетитор, который адаптируется к вашему стилю обучения.
--   **💻 Браузерная IDE**: Начинайте кодить мгновенно в облачной среде с умным автодополнением.
--   **🗺️ Интерактивные Карьерные Треки**: Структурированные дорожные карты, разработанные на основе требований индустрии.
--   **🏆 Геймификация**: Выполняйте челленджи, поддерживайте стрик (серию) занятий, получайте бейджи и поднимайтесь в таблице лидеров.
--   **📊 Умная Аналитика**: Отслеживайте свой прогресс с помощью детальных метрик и инсайтов.
--   **🎨 Премиум UI/UX**: Потрясающий интерфейс в темной теме с использованием глассморфизма и плавных анимаций.
+```bash
+npm run lint
+npm run test:unit
+npx playwright install chromium
+npm run test:e2e
+npm run build
+npm audit
+```
 
----
+Для авторизованных E2E-тестов задайте `E2E_AUTH_STORAGE_STATE` с путём к Playwright storage state.
 
-## 🛠️ Технологический Стек
+## Supabase
 
--   **Frontend**: React 19, React Router 7
--   **Стилизация**: Tailwind CSS v4, Framer Motion (Анимации), Lucide React (Иконки)
--   **Язык**: TypeScript
--   **3D Графика**: Three.js, React Three Fiber
--   **Backend / Авторизация**: Supabase
--   **Управление Состоянием**: Zustand
--   **Сборщик**: Vite
+Привяжите проект и примените все миграции:
 
----
+```bash
+npx supabase link --project-ref <project-ref>
+npx supabase db push
+```
 
-## 🚀 Начало Работы
+Добавьте секреты Edge Functions:
 
-Следуйте этим шагам, чтобы запустить проект локально.
+```text
+OPENAI_API_KEY
+APP_BASE_URL
+BINANCE_PAY_API_KEY
+BINANCE_PAY_SECRET_KEY
+BINANCE_PAY_BASE_URL
+BINANCE_PAY_CURRENCY
+BINANCE_PAY_ORDER_EXPIRE_MINUTES
+BINANCE_PAY_PRO_MONTHLY_AMOUNT
+BINANCE_PAY_PRO_THREE_MONTH_AMOUNT
+```
 
-### Предварительные требования
+Затем разверните пользовательские функции и webhook:
 
--   Node.js (v18 или выше)
--   npm или yarn
+```bash
+npx supabase functions deploy generate-lesson
+npx supabase functions deploy create-checkout-session
+npx supabase functions deploy billing-webhook
+npx supabase functions deploy reset-user-state
+```
 
-### Установка
+`APP_BASE_URL` должен быть доверенным origin приложения, например `https://app.example.com`. Webhook Binance Pay должен указывать на `/functions/v1/billing-webhook`.
 
-1.  **Клонируйте репозиторий**
-    ```bash
-    git clone https://github.com/Alex-dev-sys/VibeStudy2.git
-    cd vibestudy-2-0
-    ```
+Перед production-запуском пройдите [чек-лист](docs/LAUNCH_CHECKLIST.md).
 
-2.  **Установите зависимости**
-    ```bash
-    npm install
-    ```
+## Лицензия
 
-3.  **Запустите сервер разработки**
-    ```bash
-    npm run dev
-    ```
-
-4.  **Откройте в браузере**
-    Перейдите по адресу `http://localhost:5173`, чтобы увидеть приложение в действии!
-
----
-
-## 📸 Скриншоты
-
-*(Добавьте ваши скриншоты сюда)*
-
----
-
-## 🤝 Вклад в проект (Contributing)
-
-Мы приветствуем любой вклад в развитие проекта!
-
-1.  Форкните проект (Fork)
-2.  Создайте ветку для вашей фичи (`git checkout -b feature/AmazingFeature`)
-3.  Закоммитьте изменения (`git commit -m 'Add some AmazingFeature'`)
-4.  Запушьте ветку (`git push origin feature/AmazingFeature`)
-5.  Откройте Pull Request
-
----
-
-## 📄 Лицензия
-
-Распространяется под лицензией MIT. Смотрите файл `LICENSE` для получения дополнительной информации.
-
----
-
-<div align="center">
-  <p>Сделано с ❤️ коммандой VibeStudy</p>
-</div>
+MIT — см. [LICENSE](LICENSE).

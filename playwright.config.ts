@@ -24,7 +24,7 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: `npm run dev -- --host 127.0.0.1 --port ${port}`,
+        command: `node node_modules/vite/bin/vite.js --host 127.0.0.1 --port ${port}`,
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         stdout: 'pipe',

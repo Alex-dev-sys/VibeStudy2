@@ -8,7 +8,6 @@ const corsHeaders = {
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 8;
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
-const FREE_TRACK_DAY_LIMIT = 3;
 const FREE_DAILY_HINT_LIMIT = 3;
 
 interface GenerateLessonPayload {
@@ -64,18 +63,40 @@ interface ReviewResponse {
     canComplete: boolean;
 }
 
+type FeatureCode = 'lesson_generation' | 'ai_hint' | 'ai_review';
+
+class HttpError extends Error {
+    constructor(message: string, readonly status: number) {
+        super(message);
+    }
+}
+
+function isBoundedText(value: unknown, maxLength: number, allowEmpty = false): value is string {
+    return (
+        typeof value === 'string' &&
+        value.length <= maxLength &&
+        (allowEmpty || value.trim().length > 0)
+    );
+}
+
+function isValidDay(value: unknown): value is number {
+    return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 3650;
+}
+
 function isLessonPayload(value: unknown): value is GenerateLessonPayload {
     if (!value || typeof value !== 'object') return false;
 
     const payload = value as Partial<GenerateLessonPayload>;
     return (
         (payload.type === undefined || payload.type === 'lesson') &&
-        typeof payload.trackId === 'string' &&
-        typeof payload.language === 'string' &&
-        typeof payload.day === 'number' &&
-        typeof payload.title === 'string' &&
+        isBoundedText(payload.trackId, 80) &&
+        isBoundedText(payload.language, 40) &&
+        isValidDay(payload.day) &&
+        isBoundedText(payload.title, 200) &&
         Array.isArray(payload.topics) &&
-        payload.topics.every((topic) => typeof topic === 'string')
+        payload.topics.length >= 1 &&
+        payload.topics.length <= 20 &&
+        payload.topics.every((topic) => isBoundedText(topic, 200))
     );
 }
 
@@ -85,13 +106,13 @@ function isHintPayload(value: unknown): value is GenerateHintPayload {
     const payload = value as Partial<GenerateHintPayload>;
     return (
         payload.type === 'hint' &&
-        typeof payload.trackId === 'string' &&
-        typeof payload.language === 'string' &&
-        typeof payload.day === 'number' &&
-        typeof payload.lessonTitle === 'string' &&
-        typeof payload.taskTitle === 'string' &&
-        typeof payload.taskDescription === 'string' &&
-        (payload.userCode === undefined || typeof payload.userCode === 'string')
+        isBoundedText(payload.trackId, 80) &&
+        isBoundedText(payload.language, 40) &&
+        isValidDay(payload.day) &&
+        isBoundedText(payload.lessonTitle, 200) &&
+        isBoundedText(payload.taskTitle, 200) &&
+        isBoundedText(payload.taskDescription, 4000) &&
+        (payload.userCode === undefined || isBoundedText(payload.userCode, 20000, true))
     );
 }
 
@@ -101,13 +122,13 @@ function isReviewPayload(value: unknown): value is GenerateReviewPayload {
     const payload = value as Partial<GenerateReviewPayload>;
     return (
         payload.type === 'review' &&
-        typeof payload.trackId === 'string' &&
-        typeof payload.language === 'string' &&
-        typeof payload.day === 'number' &&
-        typeof payload.lessonTitle === 'string' &&
-        typeof payload.taskTitle === 'string' &&
-        typeof payload.taskDescription === 'string' &&
-        typeof payload.userCode === 'string'
+        isBoundedText(payload.trackId, 80) &&
+        isBoundedText(payload.language, 40) &&
+        isValidDay(payload.day) &&
+        isBoundedText(payload.lessonTitle, 200) &&
+        isBoundedText(payload.taskTitle, 200) &&
+        isBoundedText(payload.taskDescription, 4000) &&
+        isBoundedText(payload.userCode, 20000)
     );
 }
 
@@ -279,13 +300,8 @@ async function hashPayload(payload: GenerateLessonPayload) {
     return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function getRequesterKey(request: Request) {
-    const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-    const realIp = request.headers.get('x-real-ip');
-    const flyClientIp = request.headers.get('fly-client-ip');
-    const authHeader = request.headers.get('authorization')?.slice(-24);
-
-    return forwardedFor || realIp || flyClientIp || authHeader || 'anonymous';
+function getRequesterKey(userId: string) {
+    return `user:${userId}`;
 }
 
 function createAdminClient() {
@@ -325,189 +341,30 @@ function createUserClient(request: Request) {
     });
 }
 
-function isMissingBillingSchemaError(error: { message?: string } | null) {
-    const message = error?.message?.toLowerCase() ?? '';
-    return (
-        message.includes('entitlements') ||
-        message.includes('feature_usage') ||
-        message.includes('subscriptions') ||
-        message.includes('schema cache')
-    );
-}
-
-function isPaidEntitlement(entitlementCodes: string[], featureCode: 'lesson_generation' | 'ai_hint' | 'ai_review') {
-    if (entitlementCodes.includes('all_tracks')) {
-        return true;
-    }
-
-    if (featureCode === 'lesson_generation') {
-        return entitlementCodes.includes('unlimited_lessons');
-    }
-
-    if (featureCode === 'ai_hint') {
-        return entitlementCodes.includes('unlimited_ai_hints');
-    }
-
-    return entitlementCodes.includes('unlimited_ai_reviews') || entitlementCodes.includes('unlimited_lessons');
-}
-
-async function getEntitlementCodes(userId: string) {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-        .from('entitlements')
-        .select('entitlement_code')
-        .eq('user_id', userId)
-        .eq('active', true);
-
-    if (error) {
-        if (isMissingBillingSchemaError(error)) {
-            return [] as string[];
-        }
-
-        throw new Error(`Entitlement lookup failed: ${error.message}`);
-    }
-
-    return (data ?? []).map((row) => String(row.entitlement_code));
-}
-
-async function getLatestChosenTrack(userId: string) {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-        .from('feature_usage')
-        .select('metadata')
-        .eq('user_id', userId)
-        .eq('feature_code', 'lesson_generation')
-        .order('usage_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-    if (error) {
-        if (isMissingBillingSchemaError(error)) {
-            return null;
-        }
-
-        throw new Error(`Feature usage lookup failed: ${error.message}`);
-    }
-
-    const metadata = data?.metadata;
-    if (!metadata || typeof metadata !== 'object') {
-        return null;
-    }
-
-    const trackId = (metadata as Record<string, unknown>).track_id;
-    return typeof trackId === 'string' ? trackId : null;
-}
-
-async function getFeatureUsageCount(userId: string, featureCode: 'lesson_generation' | 'ai_hint' | 'ai_review') {
-    const supabase = createAdminClient();
-    const usageDate = new Date().toISOString().slice(0, 10);
-    const { data, error } = await supabase
-        .from('feature_usage')
-        .select('usage_count')
-        .eq('user_id', userId)
-        .eq('feature_code', featureCode)
-        .eq('usage_date', usageDate)
-        .maybeSingle();
-
-    if (error) {
-        if (isMissingBillingSchemaError(error)) {
-            return 0;
-        }
-
-        throw new Error(`Feature usage counter lookup failed: ${error.message}`);
-    }
-
-    return Number(data?.usage_count ?? 0);
-}
-
-async function recordFeatureUsage(
+async function reserveFeatureUsage(
     userId: string,
-    featureCode: 'lesson_generation' | 'ai_hint' | 'ai_review',
-    trackId: string,
-    day: number
-) {
-    const supabase = createAdminClient();
-    const usageDate = new Date().toISOString().slice(0, 10);
-
-    const { data: existing, error: existingError } = await supabase
-        .from('feature_usage')
-        .select('id, usage_count, metadata')
-        .eq('user_id', userId)
-        .eq('feature_code', featureCode)
-        .eq('usage_date', usageDate)
-        .maybeSingle();
-
-    if (existingError) {
-        if (isMissingBillingSchemaError(existingError)) {
-            return;
-        }
-
-        throw new Error(`Feature usage write lookup failed: ${existingError.message}`);
-    }
-
-    const metadata = {
-        ...((existing?.metadata as Record<string, unknown> | null) ?? {}),
-        track_id: trackId,
-        day,
-        touched_at: new Date().toISOString(),
-    };
-
-    if (existing) {
-        const { error: updateError } = await supabase
-            .from('feature_usage')
-            .update({
-                usage_count: Number(existing.usage_count ?? 0) + 1,
-                metadata,
-                updated_at: new Date().toISOString(),
-            })
-            .eq('id', existing.id);
-
-        if (updateError && !isMissingBillingSchemaError(updateError)) {
-            throw new Error(`Feature usage update failed: ${updateError.message}`);
-        }
-
-        return;
-    }
-
-    const { error: insertError } = await supabase
-        .from('feature_usage')
-        .insert({
-            user_id: userId,
-            feature_code: featureCode,
-            usage_date: usageDate,
-            usage_count: 1,
-            metadata,
-        });
-
-    if (insertError && !isMissingBillingSchemaError(insertError)) {
-        throw new Error(`Feature usage insert failed: ${insertError.message}`);
-    }
-}
-
-async function enforceAccessRules(
-    userId: string,
-    featureCode: 'lesson_generation' | 'ai_hint' | 'ai_review',
+    featureCode: FeatureCode,
     payload: GenerateLessonPayload | GenerateHintPayload | GenerateReviewPayload
 ) {
-    const entitlementCodes = await getEntitlementCodes(userId);
-    if (isPaidEntitlement(entitlementCodes, featureCode)) {
-        return;
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.rpc('reserve_feature_usage', {
+        p_user_id: userId,
+        p_feature_code: featureCode,
+        p_track_id: payload.trackId,
+        p_day: payload.day,
+        p_daily_limit: featureCode === 'ai_hint' ? FREE_DAILY_HINT_LIMIT : null,
+    });
+
+    if (error) {
+        throw new Error(`Feature usage reservation failed: ${error.message}`);
     }
 
-    const chosenTrack = await getLatestChosenTrack(userId);
-    if (chosenTrack && chosenTrack !== payload.trackId) {
-        throw new Error('Free plan is limited to one selected track. Upgrade to unlock all tracks.');
-    }
-
-    if (payload.day > FREE_TRACK_DAY_LIMIT) {
-        throw new Error(`Free plan includes only the first ${FREE_TRACK_DAY_LIMIT} days of the selected track.`);
-    }
-
-    if (featureCode === 'ai_hint') {
-        const hintsUsedToday = await getFeatureUsageCount(userId, 'ai_hint');
-        if (hintsUsedToday >= FREE_DAILY_HINT_LIMIT) {
-            throw new Error(`Daily AI hint limit reached for the free plan. You have ${FREE_DAILY_HINT_LIMIT} hints per day.`);
-        }
+    const reservation = Array.isArray(data) ? data[0] : data;
+    if (!reservation?.allowed) {
+        throw new HttpError(
+            typeof reservation?.reason === 'string' ? reservation.reason : 'This feature is not available on your plan.',
+            403
+        );
     }
 }
 
@@ -563,27 +420,18 @@ async function writeCachedLesson(payload: GenerateLessonPayload, cacheKey: strin
 
 async function checkRateLimit(requesterKey: string) {
     const supabase = createAdminClient();
-    const threshold = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
-    const { count, error: countError } = await supabase
-        .from('ai_request_log')
-        .select('id', { count: 'exact', head: true })
-        .eq('requester_key', requesterKey)
-        .gte('created_at', threshold);
+    const { data, error } = await supabase.rpc('reserve_ai_request', {
+        p_requester_key: requesterKey,
+        p_max_requests: RATE_LIMIT_MAX_REQUESTS,
+        p_window_seconds: Math.floor(RATE_LIMIT_WINDOW_MS / 1000),
+    });
 
-    if (countError) {
-        throw new Error(`Rate limit lookup failed: ${countError.message}`);
+    if (error) {
+        throw new Error(`Rate limit reservation failed: ${error.message}`);
     }
 
-    if ((count ?? 0) >= RATE_LIMIT_MAX_REQUESTS) {
-        throw new Error('Rate limit exceeded. Try again in a few minutes.');
-    }
-
-    const { error: insertError } = await supabase
-        .from('ai_request_log')
-        .insert({ requester_key: requesterKey });
-
-    if (insertError) {
-        throw new Error(`Rate limit write failed: ${insertError.message}`);
+    if (data !== true) {
+        throw new HttpError('Rate limit exceeded. Try again in a few minutes.', 429);
     }
 }
 
@@ -592,15 +440,14 @@ Deno.serve(async (request) => {
         return new Response('ok', { headers: corsHeaders });
     }
 
-    try {
-        const apiKey = Deno.env.get('OPENAI_API_KEY');
-        if (!apiKey) {
-            return Response.json(
-                { error: 'Missing OPENAI_API_KEY secret in Edge Functions environment.' },
-                { status: 500, headers: corsHeaders }
-            );
-        }
+    if (request.method !== 'POST') {
+        return Response.json(
+            { error: 'Method not allowed.' },
+            { status: 405, headers: { ...corsHeaders, Allow: 'POST' } }
+        );
+    }
 
+    try {
         const authHeader = request.headers.get('Authorization');
         if (!authHeader) {
             return Response.json({ error: 'Missing authorization header.' }, { status: 401, headers: corsHeaders });
@@ -616,15 +463,23 @@ Deno.serve(async (request) => {
             return Response.json({ error: 'Unauthorized.' }, { status: 401, headers: corsHeaders });
         }
 
-        const payload = await request.json();
-        await checkRateLimit(getRequesterKey(request));
+        const payload: unknown = await request.json();
+        if (!isLessonPayload(payload) && !isHintPayload(payload) && !isReviewPayload(payload)) {
+            return Response.json({ error: 'Invalid payload.' }, { status: 400, headers: corsHeaders });
+        }
+
+        const apiKey = Deno.env.get('OPENAI_API_KEY');
+        if (!apiKey) {
+            throw new Error('Missing OPENAI_API_KEY secret in Edge Functions environment.');
+        }
+
+        await checkRateLimit(getRequesterKey(user.id));
 
         if (isLessonPayload(payload)) {
-            await enforceAccessRules(user.id, 'lesson_generation', payload);
+            await reserveFeatureUsage(user.id, 'lesson_generation', payload);
             const cacheKey = await hashPayload(payload);
             const cachedLesson = await getCachedLesson(cacheKey);
             if (cachedLesson) {
-                await recordFeatureUsage(user.id, 'lesson_generation', payload.trackId, payload.day);
                 return Response.json(cachedLesson, {
                     headers: { ...corsHeaders, 'x-vibestudy-cache': 'hit' },
                 });
@@ -636,41 +491,36 @@ Deno.serve(async (request) => {
             }
 
             await writeCachedLesson(payload, cacheKey, lesson);
-            await recordFeatureUsage(user.id, 'lesson_generation', payload.trackId, payload.day);
-
             return Response.json(lesson, {
                 headers: { ...corsHeaders, 'x-vibestudy-cache': 'miss' },
             });
         }
 
         if (isHintPayload(payload)) {
-            await enforceAccessRules(user.id, 'ai_hint', payload);
+            await reserveFeatureUsage(user.id, 'ai_hint', payload);
             const hint = await requestJsonCompletion(apiKey, buildHintPrompt(payload), 700);
             if (!isHintResponse(hint)) {
                 throw new Error('AI returned an invalid hint schema.');
             }
 
-            await recordFeatureUsage(user.id, 'ai_hint', payload.trackId, payload.day);
             return Response.json(hint, { headers: corsHeaders });
         }
 
-        if (isReviewPayload(payload)) {
-            await enforceAccessRules(user.id, 'ai_review', payload);
-            const review = await requestJsonCompletion(apiKey, buildReviewPrompt(payload), 900);
-            if (!isReviewResponse(review)) {
-                throw new Error('AI returned an invalid review schema.');
-            }
-
-            await recordFeatureUsage(user.id, 'ai_review', payload.trackId, payload.day);
-            return Response.json(review, { headers: corsHeaders });
+        await reserveFeatureUsage(user.id, 'ai_review', payload);
+        const review = await requestJsonCompletion(apiKey, buildReviewPrompt(payload), 900);
+        if (!isReviewResponse(review)) {
+            throw new Error('AI returned an invalid review schema.');
         }
 
-        return Response.json(
-            { error: 'Invalid payload.' },
-            { status: 400, headers: corsHeaders }
-        );
+        return Response.json(review, { headers: corsHeaders });
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return Response.json({ error: message }, { status: 500, headers: corsHeaders });
+        console.error('generate-lesson failed', error);
+        const status = error instanceof HttpError ? error.status : error instanceof SyntaxError ? 400 : 500;
+        const message = error instanceof HttpError
+            ? error.message
+            : error instanceof SyntaxError
+              ? 'Invalid JSON body.'
+              : 'AI request could not be completed.';
+        return Response.json({ error: message }, { status, headers: corsHeaders });
     }
 });

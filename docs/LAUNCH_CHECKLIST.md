@@ -33,7 +33,7 @@
 
 ## 4. Billing
 
-- [ ] Cryptomus recurring plans are ready for monthly and three-month autopay.
+- [ ] Binance Pay one-time plans are ready for 30-day and 90-day access; no auto-renew is advertised.
 - [ ] Checkout success URL points back to the correct app domain.
 - [ ] Checkout cancel URL returns to a meaningful in-product screen.
 - [ ] Webhook endpoint is configured to call `billing-webhook`.
@@ -41,7 +41,7 @@
   subscription row created or updated,
   entitlements granted,
   profile state changes from `Free` to `Pro`.
-- [ ] Test cancellation or downgrade and confirm entitlements are removed.
+- [ ] Test expiry, refund, refunding and provider error states; confirm they never retain paid entitlements.
 
 ## 5. AI And Learning Runtime
 

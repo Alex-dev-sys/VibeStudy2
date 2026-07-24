@@ -3,6 +3,7 @@ import {
     type BinanceOrderResult,
     type BinancePaidPlanCode,
     binancePayRequest,
+    buildTrustedCheckoutRedirectUrl,
     createMerchantTradeNo,
     getBinanceCheckoutRedirectUrl,
     getBinancePayEnv,
@@ -42,21 +43,17 @@ function createAdminClient() {
     });
 }
 
-function normalizePath(path: string | undefined, fallback: string) {
-    const value = path?.trim() || fallback;
-    if (!value.startsWith('/')) {
-        throw new Error('Checkout redirect paths must start with "/".');
+function readPositiveNumber(name: string, options?: { min?: number; max?: number }) {
+    const value = Number(getBinancePayEnv(name));
+    if (
+        !Number.isFinite(value) ||
+        value <= 0 ||
+        (options?.min !== undefined && value < options.min) ||
+        (options?.max !== undefined && value > options.max)
+    ) {
+        throw new Error(`${name} must be a valid positive number.`);
     }
     return value;
-}
-
-function buildRedirectUrl(request: Request, path: string) {
-    const origin = request.headers.get('Origin') ?? getBinancePayEnv('APP_BASE_URL');
-    const url = new URL(path, origin);
-    if (Array.from(url.searchParams.keys()).length > 1) {
-        throw new Error('Binance Pay redirect URLs can only contain one query parameter.');
-    }
-    return url.toString();
 }
 
 function getPlanConfig(planCode: BinancePaidPlanCode) {
@@ -66,7 +63,7 @@ function getPlanConfig(planCode: BinancePaidPlanCode) {
         case 'pro_monthly':
             return {
                 planCode,
-                amount: Number(getBinancePayEnv('BINANCE_PAY_PRO_MONTHLY_AMOUNT')),
+                amount: readPositiveNumber('BINANCE_PAY_PRO_MONTHLY_AMOUNT'),
                 currency,
                 title: 'VibeStudy Pro 30 Days',
                 description: 'VibeStudy premium access for 30 days',
@@ -74,7 +71,7 @@ function getPlanConfig(planCode: BinancePaidPlanCode) {
         case 'pro_three_month':
             return {
                 planCode,
-                amount: Number(getBinancePayEnv('BINANCE_PAY_PRO_THREE_MONTH_AMOUNT')),
+                amount: readPositiveNumber('BINANCE_PAY_PRO_THREE_MONTH_AMOUNT'),
                 currency,
                 title: 'VibeStudy Pro 90 Days',
                 description: 'VibeStudy premium access for 90 days',
@@ -92,7 +89,9 @@ async function createBinanceOrder(params: {
     const plan = getPlanConfig(params.planCode);
     const merchantTradeNo = createMerchantTradeNo(params.userId, params.planCode);
     const webhookUrl = new URL('/functions/v1/billing-webhook', getBinancePayEnv('SUPABASE_URL')).toString();
-    const orderExpireMinutes = Number(Deno.env.get('BINANCE_PAY_ORDER_EXPIRE_MINUTES') ?? '20');
+    const orderExpireMinutes = Deno.env.get('BINANCE_PAY_ORDER_EXPIRE_MINUTES')
+        ? readPositiveNumber('BINANCE_PAY_ORDER_EXPIRE_MINUTES', { min: 1, max: 60 })
+        : 20;
     const payload = {
         env: {
             terminalType: 'WEB',
@@ -158,10 +157,15 @@ Deno.serve(async (request) => {
             );
         }
 
-        const successPath = normalizePath(payload.successPath, '/profile?billing=success');
-        const cancelPath = normalizePath(payload.cancelPath, '/pricing?billing=cancelled');
-        const successUrl = buildRedirectUrl(request, successPath);
-        const cancelUrl = buildRedirectUrl(request, cancelPath);
+        const appBaseUrl = getBinancePayEnv('APP_BASE_URL');
+        const successUrl = buildTrustedCheckoutRedirectUrl(
+            payload.successPath?.trim() || '/profile?billing=success',
+            appBaseUrl
+        );
+        const cancelUrl = buildTrustedCheckoutRedirectUrl(
+            payload.cancelPath?.trim() || '/pricing?billing=cancelled',
+            appBaseUrl
+        );
 
         const userClient = createUserClient(request);
         const admin = createAdminClient();

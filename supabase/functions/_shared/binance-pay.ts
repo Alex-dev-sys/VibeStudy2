@@ -145,13 +145,13 @@ export function mapBinanceOrderStatusToSubscriptionStatus(status: BinanceOrderSt
         case 'CANCELED':
             return 'canceled';
         case 'ERROR':
-            return 'past_due';
+            return 'incomplete';
         case 'EXPIRED':
         case 'REFUNDED':
         case 'FULL_REFUNDED':
             return 'expired';
         case 'REFUNDING':
-            return 'active';
+            return 'paused';
         case 'INITIAL':
         case 'PENDING':
         default:
@@ -159,6 +159,32 @@ export function mapBinanceOrderStatusToSubscriptionStatus(status: BinanceOrderSt
     }
 }
 
+export function buildTrustedCheckoutRedirectUrl(path: string, appBaseUrl: string) {
+    const value = path.trim();
+    if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\') || value.length > 512) {
+        throw new Error('Checkout redirect must be a safe application-relative path.');
+    }
+
+    const baseUrl = new URL(appBaseUrl);
+    if (
+        (baseUrl.protocol !== 'https:' && baseUrl.protocol !== 'http:') ||
+        baseUrl.username ||
+        baseUrl.password
+    ) {
+        throw new Error('APP_BASE_URL must be a trusted HTTP(S) origin.');
+    }
+
+    const redirectUrl = new URL(value, baseUrl);
+    if (redirectUrl.origin !== baseUrl.origin) {
+        throw new Error('Checkout redirect cannot leave the configured application origin.');
+    }
+
+    if (Array.from(redirectUrl.searchParams.keys()).length > 1) {
+        throw new Error('Binance Pay redirect URLs can only contain one query parameter.');
+    }
+
+    return redirectUrl.toString();
+}
 export function getBinanceCheckoutRedirectUrl(order: Pick<BinanceOrderResult, 'checkoutUrl' | 'universalUrl' | 'deeplink'>) {
     const redirectUrl = order.checkoutUrl || order.universalUrl || order.deeplink;
     if (!redirectUrl) {

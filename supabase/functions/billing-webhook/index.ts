@@ -109,7 +109,7 @@ function getEntitlementsForPlan(): SubscriptionEntitlementCode[] {
 }
 
 function isEntitledStatus(status: LocalSubscriptionStatus) {
-    return status === 'active' || status === 'trialing' || status === 'past_due';
+    return status === 'active' || status === 'trialing';
 }
 
 function extractWebhookContext(payload: Record<string, unknown>) {
@@ -266,7 +266,7 @@ async function syncEntitlements(
         throw deleteError;
     }
 
-    if (!isEntitledStatus(status)) {
+    if (!isEntitledStatus(status) || !startsAt || !endsAt || new Date(endsAt).getTime() <= Date.now()) {
         return;
     }
 
@@ -276,7 +276,7 @@ async function syncEntitlements(
         source: 'subscription' as const,
         source_id: subscriptionId,
         active: true,
-        starts_at: startsAt ?? new Date().toISOString(),
+        starts_at: startsAt,
         ends_at: endsAt,
         metadata: {
             plan_code: planCode,
@@ -354,19 +354,19 @@ async function upsertSubscriptionFromOrder(
     const paidAt =
         order.transactTime != null ? new Date(order.transactTime).toISOString() : existingSubscription?.current_period_start;
 
-    if (status === 'incomplete' && !existingSubscription) {
-        return null;
-    }
-
-    if (status === 'canceled' && !existingSubscription) {
+    if (!isEntitledStatus(status) && !existingSubscription) {
         return null;
     }
 
     const currentPeriodStart = paidAt ?? existingSubscription?.current_period_start ?? null;
-    let currentPeriodEnd =
-        currentPeriodStart != null ? calculatePaidAccessEnd(currentPeriodStart, planCode) : existingSubscription?.current_period_end;
+    let currentPeriodEnd = existingSubscription?.current_period_end ?? null;
 
-    if (status === 'expired') {
+    if (isEntitledStatus(status)) {
+        if (!currentPeriodStart) {
+            throw new Error('Paid order is missing its transaction timestamp.');
+        }
+        currentPeriodEnd = calculatePaidAccessEnd(currentPeriodStart, planCode);
+    } else if (status === 'expired' || status === 'paused' || status === 'canceled') {
         currentPeriodEnd = new Date().toISOString();
     }
 

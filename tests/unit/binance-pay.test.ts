@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
     buildBinancePaySignaturePayload,
+    buildTrustedCheckoutRedirectUrl,
     calculatePaidAccessEnd,
     getBinanceCheckoutRedirectUrl,
     getPaidAccessWindowDays,
@@ -46,7 +47,8 @@ test('mapBinanceOrderStatusToSubscriptionStatus keeps access semantics honest', 
     assert.equal(mapBinanceOrderStatusToSubscriptionStatus('PENDING'), 'incomplete');
     assert.equal(mapBinanceOrderStatusToSubscriptionStatus('CANCELED'), 'canceled');
     assert.equal(mapBinanceOrderStatusToSubscriptionStatus('EXPIRED'), 'expired');
-    assert.equal(mapBinanceOrderStatusToSubscriptionStatus('ERROR'), 'past_due');
+    assert.equal(mapBinanceOrderStatusToSubscriptionStatus('ERROR'), 'incomplete');
+    assert.equal(mapBinanceOrderStatusToSubscriptionStatus('REFUNDING'), 'paused');
 });
 
 test('getBinanceCheckoutRedirectUrl prefers hosted checkout url', () => {
@@ -57,4 +59,19 @@ test('getBinanceCheckoutRedirectUrl prefers hosted checkout url', () => {
     });
 
     assert.equal(redirectUrl, 'https://pay.binance.com/en/checkout/123');
+});
+test('checkout redirects stay on the configured application origin', () => {
+    assert.equal(
+        buildTrustedCheckoutRedirectUrl('/profile?billing=success', 'https://app.vibestudy.dev'),
+        'https://app.vibestudy.dev/profile?billing=success'
+    );
+
+    assert.throws(
+        () => buildTrustedCheckoutRedirectUrl('//evil.example/steal', 'https://app.vibestudy.dev'),
+        /safe application-relative path/
+    );
+    assert.throws(
+        () => buildTrustedCheckoutRedirectUrl('/\\evil.example', 'https://app.vibestudy.dev'),
+        /safe application-relative path/
+    );
 });

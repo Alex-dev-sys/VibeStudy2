@@ -29,6 +29,15 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser smoke tests
+        run: npm run test:e2e
+
       - name: Build
         run: npm run build
 
@@ -54,7 +63,6 @@ jobs:
           script: |
             cd /var/www/vibestudy2
             git pull origin main
-            npm install
+            npm ci
             npm run build
             pm2 restart vibestudy2
-
