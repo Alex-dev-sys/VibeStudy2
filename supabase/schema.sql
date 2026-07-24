@@ -52,14 +52,16 @@ CREATE TABLE public.achievements (
     UNIQUE(user_id, achievement_type, achievement_name)
 );
 
--- 5. Generated Lessons Cache (optional, for caching AI responses)
+-- 5. Generated Lessons Cache
 CREATE TABLE public.lesson_cache (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     course_id TEXT NOT NULL,
     day INT NOT NULL,
-    theory TEXT,
-    tasks JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
+    theory TEXT NOT NULL,
+    tasks JSONB NOT NULL DEFAULT '[]'::JSONB,
+    model TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(course_id, day)
 );
 
@@ -118,14 +120,11 @@ CREATE POLICY "Users can insert own achievements"
     ON public.achievements FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
--- Lesson Cache: Public read, authenticated write
-CREATE POLICY "Anyone can view cached lessons"
+-- Lesson Cache: authenticated users can read; writes happen in the Edge Function.
+CREATE POLICY "lesson_cache_select_authenticated"
     ON public.lesson_cache FOR SELECT
+    TO authenticated
     USING (true);
-
-CREATE POLICY "Authenticated users can cache lessons"
-    ON public.lesson_cache FOR INSERT
-    WITH CHECK (auth.role() = 'authenticated');
 
 -- ============================================
 -- Triggers for automatic profile creation

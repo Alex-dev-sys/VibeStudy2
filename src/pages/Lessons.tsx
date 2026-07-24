@@ -227,30 +227,37 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
     const { user } = useAuthStore();
     const { completeTask, completeLesson, isTaskCompleted } = useProgressStore();
     const { getLesson, setLesson } = useLessonStore();
-    const { generateLesson, generatedContent, isLoading, error } = useAIGeneration();
+    const {
+        generateLesson,
+        generatedContent,
+        isLoading,
+        error,
+        loadContent,
+        clearContent,
+    } = useAIGeneration();
     const [selectedTask, setSelectedTask] = useState<{ id: number; title: string; description: string; difficulty: 'easy' | 'medium' | 'hard'; codeTemplate?: string } | null>(null);
-    const [localCompletedTasks, setLocalCompletedTasks] = useState<number[]>([]);
+    const completedTaskIds = generatedContent?.tasks
+        .filter((task) => isTaskCompleted(course.id, lesson.day, task.id))
+        .map((task) => task.id) ?? [];
 
-    // Load cached lesson if exists
+    // Load the locally cached lesson when navigating between course days.
     useEffect(() => {
         const cached = getLesson(course.id, lesson.day);
-        if (cached && !generatedContent) {
-            // Could load from cache here if useAIGeneration supported it
+        if (cached) {
+            loadContent(cached);
+        } else {
+            clearContent();
         }
-    }, [course.id, lesson.day, getLesson, generatedContent]);
-
-    // Check which tasks are already completed
-    useEffect(() => {
-        if (generatedContent) {
-            const completed = generatedContent.tasks
-                .filter(t => isTaskCompleted(course.id, lesson.day, t.id))
-                .map(t => t.id);
-            setLocalCompletedTasks(completed);
-        }
-    }, [generatedContent, course.id, lesson.day, isTaskCompleted]);
+    }, [course.id, lesson.day, getLesson, loadContent, clearContent]);
 
     const handleGenerate = async () => {
-        const result = await generateLesson(course.name, lesson.day, lesson.title, lesson.topics);
+        const result = await generateLesson(
+            course.id,
+            course.name,
+            lesson.day,
+            lesson.title,
+            lesson.topics
+        );
         if (result) {
             setLesson(course.id, lesson.day, result);
         }
@@ -259,12 +266,11 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
     const handleTaskComplete = async () => {
         if (selectedTask && user?.id) {
             await completeTask(user.id, course.id, lesson.day, selectedTask.id);
-            setLocalCompletedTasks(prev => [...prev, selectedTask.id]);
 
             // Check if all tasks completed
             if (generatedContent) {
                 const allTaskIds = generatedContent.tasks.map(t => t.id);
-                const nowCompleted = [...localCompletedTasks, selectedTask.id];
+                const nowCompleted = [...completedTaskIds, selectedTask.id];
                 if (allTaskIds.every(id => nowCompleted.includes(id))) {
                     await completeLesson(user.id, course.id, lesson.day);
                 }
@@ -358,6 +364,11 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
                             <p className="text-gray-400 mb-8 max-w-md mx-auto">
                                 AI сгенерирует для тебя подробную теорию и практические задания по теме "{lesson.title}"
                             </p>
+                            {error && (
+                                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm max-w-md mx-auto">
+                                    {error}
+                                </div>
+                            )}
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -444,7 +455,7 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
                                                 <Target className="w-5 h-5 text-vibe-400" />
                                                 Задания
                                                 <span className="ml-auto text-sm font-normal text-gray-400">
-                                                    {localCompletedTasks.length}/{generatedContent.tasks.length}
+                                                    {completedTaskIds.length}/{generatedContent.tasks.length}
                                                 </span>
                                             </h2>
 
@@ -452,7 +463,7 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
                                             <div className="h-2 bg-dark-700 rounded-full mb-4 overflow-hidden">
                                                 <motion.div
                                                     initial={{ width: 0 }}
-                                                    animate={{ width: `${(localCompletedTasks.length / generatedContent.tasks.length) * 100}%` }}
+                                                    animate={{ width: `${(completedTaskIds.length / generatedContent.tasks.length) * 100}%` }}
                                                     className="h-full bg-gradient-to-r from-vibe-500 to-vibe-400 rounded-full"
                                                 />
                                             </div>
@@ -464,18 +475,18 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
                                                         initial={{ opacity: 0, x: 20 }}
                                                         animate={{ opacity: 1, x: 0 }}
                                                         transition={{ delay: index * 0.1 }}
-                                                        className={`p-4 rounded-xl transition-all cursor-pointer ${localCompletedTasks.includes(task.id)
+                                                        className={`p-4 rounded-xl transition-all cursor-pointer ${completedTaskIds.includes(task.id)
                                                             ? 'bg-green-500/10 border border-green-500/30'
                                                             : 'bg-dark-700/50 hover:bg-dark-700 border border-transparent hover:border-vibe-500/30'
                                                             }`}
-                                                        onClick={() => !localCompletedTasks.includes(task.id) && setSelectedTask(task)}
+                                                        onClick={() => !completedTaskIds.includes(task.id) && setSelectedTask(task)}
                                                     >
                                                         <div className="flex items-start gap-3">
-                                                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${localCompletedTasks.includes(task.id)
+                                                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${completedTaskIds.includes(task.id)
                                                                 ? 'bg-green-500/20'
                                                                 : 'bg-vibe-500/20'
                                                                 }`}>
-                                                                {localCompletedTasks.includes(task.id) ? (
+                                                                {completedTaskIds.includes(task.id) ? (
                                                                     <CheckCircle2 className="w-4 h-4 text-green-400" />
                                                                 ) : (
                                                                     <span className="text-xs font-bold text-vibe-400">{index + 1}</span>
@@ -483,7 +494,7 @@ function LessonView({ course, lesson, onNavigate, onBack }: LessonViewProps) {
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center gap-2 mb-1">
-                                                                    <h3 className={`font-medium text-sm truncate ${localCompletedTasks.includes(task.id) ? 'text-green-400' : 'text-white'
+                                                                    <h3 className={`font-medium text-sm truncate ${completedTaskIds.includes(task.id) ? 'text-green-400' : 'text-white'
                                                                         }`}>
                                                                         {task.title}
                                                                     </h3>

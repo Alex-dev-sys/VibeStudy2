@@ -46,9 +46,11 @@ export interface LessonCache {
     id: string;
     course_id: string;
     day: number;
-    theory: string | null;
-    tasks: GeneratedTask[] | null;
+    theory: string;
+    tasks: GeneratedTask[];
+    model: string | null;
     created_at: string;
+    updated_at: string;
 }
 
 export interface GeneratedTask {
@@ -85,7 +87,7 @@ export interface Database {
             };
             lesson_cache: {
                 Row: LessonCache;
-                Insert: Omit<LessonCache, 'id' | 'created_at'>;
+                Insert: Omit<LessonCache, 'id' | 'created_at' | 'updated_at'>;
                 Update: Partial<LessonCache>;
             };
         };
