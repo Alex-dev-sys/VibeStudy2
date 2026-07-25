@@ -5,13 +5,12 @@ import Sidebar from './Sidebar';
 
 export default function Layout() {
     return (
-        <div className="app-shell min-h-screen bg-background">
-            <div className="app-grid" aria-hidden="true" />
+        <div className="workspace-shell">
             <Sidebar />
-            <div className="app-workspace">
+            <div className="workspace-main">
                 <DemoBanner />
                 <Header />
-                <main className="min-h-screen pb-28 pt-32 lg:pb-10 lg:pt-36">
+                <main className="workspace-content">
                     <Outlet />
                 </main>
             </div>

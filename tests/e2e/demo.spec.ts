@@ -14,10 +14,10 @@ test.describe('demo mode', () => {
 
         await expect(page).toHaveURL(/\/home$/);
         await expect(page.getByText('Демо-режим', { exact: true })).toBeVisible();
-        await expect(page.getByRole('heading', { name: /центр обучения/i })).toBeVisible();
+        await expect(page.getByRole('heading', { name: /алекс/i })).toBeVisible();
         await expect(page.getByText('Алекс Демо', { exact: true })).toBeVisible();
 
-        await page.getByRole('link', { name: /уроки траектория обучения/i }).click();
+        await page.getByRole('navigation', { name: 'Основная навигация' }).getByRole('link', { name: 'Уроки', exact: true }).click();
         await expect(page).toHaveURL(/\/lessons$/);
         expect(protectedRequests).toEqual([]);
     });
