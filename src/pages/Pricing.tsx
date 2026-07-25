@@ -58,7 +58,7 @@ const proMoments = [
 ];
 
 export default function Pricing() {
-    const { user } = useAuthStore();
+    const { user, isDemo, exitDemo } = useAuthStore();
     const { access, subscription, startCheckout, isStartingCheckout, error: billingError } = useBillingStore();
     const [selectedPlanCode, setSelectedPlanCode] = useState<PaidPlanCode>('pro_three_month');
     const [pendingPlanCode, setPendingPlanCode] = useState<PaidPlanCode | null>(null);
@@ -83,7 +83,10 @@ export default function Pricing() {
     const handleSelectPlan = async (planCode: PaidPlanCode) => {
         setSelectedPlanCode(planCode);
 
-        if (!user) {
+        if (!user || isDemo) {
+            if (isDemo) {
+                exitDemo();
+            }
             window.location.assign('/auth');
             return;
         }

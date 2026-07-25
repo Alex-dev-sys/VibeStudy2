@@ -66,7 +66,7 @@ export default function Landing() {
             <div className="fixed bottom-10 right-10 h-72 w-72 rounded-full bg-secondary/10 blur-3xl" />
 
             <div className="relative z-10">
-                <nav className="mx-auto flex max-w-7xl items-center justify-between px-12 py-6">
+                <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12 py-6">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -107,7 +107,10 @@ export default function Landing() {
                             to="/pricing"
                             className="text-on-surface-variant transition-colors hover:text-on-surface"
                         >
-                            Pricing
+                            Тарифы
+                        </Link>
+                        <Link to="/demo" className="text-on-surface-variant transition-colors hover:text-cyan-200">
+                            Демо
                         </Link>
                         <Link to="/auth">
                             <motion.div
@@ -121,7 +124,7 @@ export default function Landing() {
                     </motion.div>
                 </nav>
 
-                <section className="mx-auto max-w-7xl px-12 pb-24 pt-20">
+                <section className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 pb-24 pt-20">
                     <div className="grid items-center gap-16 lg:grid-cols-2">
                         <div>
                             <motion.div
@@ -177,16 +180,16 @@ export default function Landing() {
                                     </motion.div>
                                 </Link>
 
-                                <a href="#how-it-works">
+                                <Link to="/demo">
                                     <motion.div
                                         className="btn-neon-outline flex items-center gap-3 rounded-full px-8 py-4 text-lg"
                                         whileHover={{ scale: 1.04 }}
                                         whileTap={{ scale: 0.96 }}
                                     >
                                         <Play className="h-5 w-5" />
-                                        Посмотреть сценарий
+                                        Открыть демо
                                     </motion.div>
-                                </a>
+                                </Link>
                             </motion.div>
                         </div>
 
@@ -234,7 +237,7 @@ export default function Landing() {
                     </div>
                 </section>
 
-                <section className="mx-auto max-w-7xl px-12 pb-20">
+                <section className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 pb-20">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -259,7 +262,7 @@ export default function Landing() {
                     </motion.div>
                 </section>
 
-                <section id="tracks" className="mx-auto max-w-7xl px-12 py-20">
+                <section id="tracks" className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 py-20">
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
@@ -303,7 +306,7 @@ export default function Landing() {
                     </div>
                 </section>
 
-                <section id="product" className="mx-auto max-w-7xl px-12 py-20">
+                <section id="product" className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 py-20">
                     <motion.div
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
@@ -347,7 +350,7 @@ export default function Landing() {
                     </div>
                 </section>
 
-                <section id="how-it-works" className="mx-auto max-w-7xl px-12 py-20">
+                <section id="how-it-works" className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 py-20">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.96 }}
                         whileInView={{ opacity: 1, scale: 1 }}
@@ -363,13 +366,13 @@ export default function Landing() {
                                 На текущем этапе лучший сценарий — зайти, выбрать трек и пройти первый
                                 честный цикл обучения.
                             </p>
-                            <Link to="/auth">
+                            <Link to="/demo">
                                 <motion.div
                                     className="btn-neon inline-flex items-center gap-3 rounded-full px-10 py-5 text-lg"
                                     whileHover={{ scale: 1.04 }}
                                     whileTap={{ scale: 0.96 }}
                                 >
-                                    Войти и начать первый урок
+                                    Открыть демо без регистрации
                                     <ArrowRight className="h-5 w-5" />
                                 </motion.div>
                             </Link>
@@ -377,7 +380,7 @@ export default function Landing() {
                     </motion.div>
                 </section>
 
-                <footer className="mx-auto max-w-7xl border-t border-white/5 px-12 py-10">
+                <footer className="mx-auto max-w-7xl border-t border-white/5 px-5 sm:px-8 lg:px-12 py-10">
                     <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
                             <span className="font-headline text-lg font-bold text-primary">
@@ -390,17 +393,17 @@ export default function Landing() {
                         </div>
 
                         <div className="flex flex-wrap gap-4 text-sm text-on-surface-variant">
-                            <Link to="/pricing" className="transition-colors hover:text-primary">
-                                Pricing
+                            <Link to="/pricing" aria-label="Pricing" className="transition-colors hover:text-primary">
+                                Тарифы
                             </Link>
-                            <Link to="/privacy" className="transition-colors hover:text-primary">
-                                Privacy
+                            <Link to="/privacy" aria-label="Privacy" className="transition-colors hover:text-primary">
+                                Конфиденциальность
                             </Link>
-                            <Link to="/terms" className="transition-colors hover:text-primary">
-                                Terms
+                            <Link to="/terms" aria-label="Terms" className="transition-colors hover:text-primary">
+                                Условия
                             </Link>
-                            <Link to="/support" className="transition-colors hover:text-primary">
-                                Support
+                            <Link to="/support" aria-label="Support" className="transition-colors hover:text-primary">
+                                Поддержка
                             </Link>
                         </div>
                     </div>

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Session, Subscription, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { demoProfile, demoUser } from '../lib/demo';
 import type { Profile } from '../types/database.types';
 
 interface AuthState {
@@ -10,8 +11,11 @@ interface AuthState {
     profile: Profile | null;
     isLoading: boolean;
     isInitialized: boolean;
+    isDemo: boolean;
 
     initialize: () => Promise<void>;
+    enterDemo: () => void;
+    exitDemo: () => void;
     setSession: (session: Session | null) => void;
     fetchProfile: () => Promise<void>;
     updateProfile: (updates: Partial<Profile>) => Promise<void>;
@@ -34,6 +38,7 @@ export const useAuthStore = create<AuthState>()(
             profile: null,
             isLoading: true,
             isInitialized: false,
+            isDemo: false,
 
             initialize: async () => {
                 if (initializePromise) {
@@ -44,6 +49,17 @@ export const useAuthStore = create<AuthState>()(
                     set({ isLoading: true });
 
                     try {
+                        if (get().isDemo) {
+                            set({
+                                session: null,
+                                user: demoUser,
+                                profile: get().profile ?? demoProfile,
+                                isLoading: false,
+                                isInitialized: true,
+                            });
+                            return;
+                        }
+
                         const { data } = await supabase.auth.getSession();
                         const session = data.session;
 
@@ -108,9 +124,33 @@ export const useAuthStore = create<AuthState>()(
                 });
             },
 
+            enterDemo: () => {
+                set({
+                    session: null,
+                    user: demoUser,
+                    profile: demoProfile,
+                    isDemo: true,
+                    isLoading: false,
+                    isInitialized: true,
+                });
+            },
+
+            exitDemo: () => {
+                set({
+                    session: null,
+                    user: null,
+                    profile: null,
+                    isDemo: false,
+                });
+            },
+
             fetchProfile: async () => {
-                const { user } = get();
+                const { user, isDemo } = get();
                 if (!user) return;
+                if (isDemo) {
+                    set({ profile: get().profile ?? demoProfile });
+                    return;
+                }
 
                 try {
                     const { data, error } = await supabase
@@ -151,8 +191,19 @@ export const useAuthStore = create<AuthState>()(
             },
 
             updateProfile: async (updates) => {
-                const { user, profile } = get();
+                const { user, profile, isDemo } = get();
                 if (!user || !profile) return;
+
+                if (isDemo) {
+                    set({
+                        profile: {
+                            ...profile,
+                            ...updates,
+                            updated_at: new Date().toISOString(),
+                        },
+                    });
+                    return;
+                }
 
                 try {
                     const { data, error } = await supabase
@@ -183,11 +234,14 @@ export const useAuthStore = create<AuthState>()(
             },
 
             signOut: async () => {
-                await supabase.auth.signOut();
+                if (!get().isDemo) {
+                    await supabase.auth.signOut();
+                }
                 set({
                     user: null,
                     session: null,
                     profile: null,
+                    isDemo: false,
                 });
             },
         }),
@@ -196,6 +250,7 @@ export const useAuthStore = create<AuthState>()(
             partialize: (state) => ({
                 user: state.user,
                 profile: state.profile,
+                isDemo: state.isDemo,
             }),
         }
     )

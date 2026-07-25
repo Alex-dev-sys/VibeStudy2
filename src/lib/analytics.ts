@@ -1,5 +1,6 @@
 export type AnalyticsEventName =
   | 'auth_viewed'
+  | 'demo_started'
   | 'magic_link_requested'
   | 'oauth_google_started'
   | 'signup_completed'

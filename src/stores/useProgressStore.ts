@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from './useAuthStore';
+import { createDemoProgress, DEMO_USER_ID } from '../lib/demo';
 import type { CompletedTask, UserProgress } from '../types/database.types';
 
 interface ProgressState {
@@ -13,6 +14,7 @@ interface ProgressState {
     ownerUserId: string | null;
 
     fetchProgress: (userId: string) => Promise<void>;
+    loadDemoProgress: () => void;
     getProgress: (courseId: string) => UserProgress | null;
     getCompletedDays: (courseId: string) => number[];
     isLessonCompleted: (courseId: string, day: number) => boolean;
@@ -50,6 +52,18 @@ export const useProgressStore = create<ProgressState>()(
             isSyncing: false,
 
             fetchProgress: async (userId: string) => {
+                if (useAuthStore.getState().isDemo || userId === DEMO_USER_ID) {
+                    if (get().ownerUserId !== DEMO_USER_ID) {
+                        set({
+                            ...createDemoProgress(),
+                            isLoading: false,
+                            ownerUserId: DEMO_USER_ID,
+                            lastSync: new Date().toISOString(),
+                        });
+                    }
+                    return;
+                }
+
                 const currentOwnerUserId = get().ownerUserId;
                 if (currentOwnerUserId && currentOwnerUserId !== userId) {
                     set({ ...emptyProgressState, isLoading: false, ownerUserId: userId });
@@ -100,6 +114,19 @@ export const useProgressStore = create<ProgressState>()(
                 }
             },
 
+            loadDemoProgress: () => {
+                if (get().ownerUserId === DEMO_USER_ID && Object.keys(get().courseProgress).length > 0) {
+                    return;
+                }
+
+                set({
+                    ...createDemoProgress(),
+                    isLoading: false,
+                    ownerUserId: DEMO_USER_ID,
+                    lastSync: new Date().toISOString(),
+                });
+            },
+
             getProgress: (courseId: string) => get().courseProgress[courseId] || null,
 
             getCompletedDays: (courseId: string) => {
@@ -119,6 +146,29 @@ export const useProgressStore = create<ProgressState>()(
             },
 
             completeLesson: async (userId: string, courseId: string, day: number) => {
+                if (useAuthStore.getState().isDemo || userId === DEMO_USER_ID) {
+                    const currentProgress = get().courseProgress[courseId];
+                    const completedDays = currentProgress?.completed_days ?? [];
+                    if (completedDays.includes(day)) return;
+
+                    set((state) => ({
+                        courseProgress: {
+                            ...state.courseProgress,
+                            [courseId]: {
+                                id: currentProgress?.id ?? 'demo-progress-' + courseId,
+                                user_id: DEMO_USER_ID,
+                                course_id: courseId,
+                                current_day: Math.max(day + 1, currentProgress?.current_day ?? 1),
+                                completed_days: [...completedDays, day].sort((a, b) => a - b),
+                                last_activity: new Date().toISOString(),
+                                created_at: currentProgress?.created_at ?? new Date().toISOString(),
+                            },
+                        },
+                        ownerUserId: DEMO_USER_ID,
+                    }));
+                    return;
+                }
+
                 if (!(await hasSession())) {
                     return;
                 }
@@ -165,6 +215,31 @@ export const useProgressStore = create<ProgressState>()(
             },
 
             completeTask: async (userId: string, courseId: string, day: number, taskId: number, code?: string) => {
+                if (useAuthStore.getState().isDemo || userId === DEMO_USER_ID) {
+                    const alreadyCompleted = get().completedTasks.some(
+                        (task) => task.course_id === courseId && task.day === day && task.task_id === taskId
+                    );
+                    if (alreadyCompleted) return 0;
+
+                    const xpEarned = 10;
+                    const completedTask: CompletedTask = {
+                        id: ['demo-task', courseId, day, taskId].join('-'),
+                        user_id: DEMO_USER_ID,
+                        course_id: courseId,
+                        day,
+                        task_id: taskId,
+                        code: code ?? null,
+                        xp_earned: xpEarned,
+                        completed_at: new Date().toISOString(),
+                    };
+                    set((state) => ({
+                        completedTasks: [...state.completedTasks, completedTask],
+                        ownerUserId: DEMO_USER_ID,
+                    }));
+                    await useAuthStore.getState().addXP(xpEarned);
+                    return xpEarned;
+                }
+
                 if (!(await hasSession())) {
                     return 0;
                 }
@@ -225,6 +300,28 @@ export const useProgressStore = create<ProgressState>()(
             },
 
             updateCurrentDay: async (userId: string, courseId: string, day: number) => {
+                if (useAuthStore.getState().isDemo || userId === DEMO_USER_ID) {
+                    const currentProgress = get().courseProgress[courseId];
+                    if (currentProgress && day <= currentProgress.current_day) return;
+
+                    set((state) => ({
+                        courseProgress: {
+                            ...state.courseProgress,
+                            [courseId]: {
+                                id: currentProgress?.id ?? 'demo-progress-' + courseId,
+                                user_id: DEMO_USER_ID,
+                                course_id: courseId,
+                                current_day: Math.max(day, currentProgress?.current_day ?? 1),
+                                completed_days: currentProgress?.completed_days ?? [],
+                                last_activity: new Date().toISOString(),
+                                created_at: currentProgress?.created_at ?? new Date().toISOString(),
+                            },
+                        },
+                        ownerUserId: DEMO_USER_ID,
+                    }));
+                    return;
+                }
+
                 if (!(await hasSession())) {
                     return;
                 }
@@ -269,6 +366,16 @@ export const useProgressStore = create<ProgressState>()(
             },
 
             resetAccountProgress: async () => {
+                if (useAuthStore.getState().isDemo) {
+                    set({
+                        ...createDemoProgress(),
+                        isLoading: false,
+                        isSyncing: false,
+                        ownerUserId: DEMO_USER_ID,
+                    });
+                    return true;
+                }
+
                 if (!(await hasSession())) {
                     return false;
                 }

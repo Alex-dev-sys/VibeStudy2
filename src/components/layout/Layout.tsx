@@ -1,16 +1,20 @@
 import { Outlet } from 'react-router-dom';
+import { DemoBanner } from '../demo/DemoBanner';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
     return (
-        <div className="min-h-screen bg-background">
-            <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(243,186,47,0.08),transparent_18%),radial-gradient(circle_at_top_right,rgba(7,198,239,0.08),transparent_18%),linear-gradient(180deg,#060a12_0%,#0b1120_50%,#060a12_100%)]" />
+        <div className="app-shell min-h-screen bg-background">
+            <div className="app-grid" aria-hidden="true" />
             <Sidebar />
-            <Header />
-            <main className="ml-72 min-h-screen pt-24">
-                <Outlet />
-            </main>
+            <div className="app-workspace">
+                <DemoBanner />
+                <Header />
+                <main className="min-h-screen pb-28 pt-32 lg:pb-10 lg:pt-36">
+                    <Outlet />
+                </main>
+            </div>
         </div>
     );
 }

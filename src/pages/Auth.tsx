@@ -1,15 +1,34 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, Chrome, Loader2, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+    ArrowLeft,
+    ArrowRight,
+    CheckCircle2,
+    Chrome,
+    Eye,
+    Loader2,
+    Route,
+    ShieldCheck,
+    Sparkles,
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { trackEvent } from '../lib/analytics';
+import { useAuthStore } from '../stores/useAuthStore';
 
 function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback;
 }
 
+const demoSteps = [
+    { code: '01', label: 'Открой готовый учебный профиль' },
+    { code: '02', label: 'Посмотри уроки, прогресс и аналитику' },
+    { code: '03', label: 'Попробуй код — данные останутся локально' },
+];
+
 export default function Auth() {
+    const navigate = useNavigate();
+    const enterDemo = useAuthStore((state) => state.enterDemo);
     const [email, setEmail] = useState('');
     const [isMagicLinkLoading, setIsMagicLinkLoading] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -20,8 +39,14 @@ export default function Auth() {
         trackEvent('auth_viewed');
     }, []);
 
-    const handleMagicLink = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleDemo = () => {
+        enterDemo();
+        trackEvent('demo_started');
+        navigate('/home', { replace: true });
+    };
+
+    const handleMagicLink = async (event: React.FormEvent) => {
+        event.preventDefault();
         if (!email) return;
 
         setIsMagicLinkLoading(true);
@@ -31,15 +56,12 @@ export default function Auth() {
         try {
             const { error: signInError } = await supabase.auth.signInWithOtp({
                 email,
-                options: {
-                    emailRedirectTo: `${window.location.origin}/home`,
-                },
+                options: { emailRedirectTo: `${window.location.origin}/home` },
             });
-
             if (signInError) throw signInError;
             setIsSuccess(true);
         } catch (err) {
-            setError(getErrorMessage(err, 'Что-то пошло не так. Попробуйте ещё раз.'));
+            setError(getErrorMessage(err, 'Не удалось отправить ссылку. Попробуйте ещё раз.'));
         } finally {
             setIsMagicLinkLoading(false);
         }
@@ -53,11 +75,8 @@ export default function Auth() {
         try {
             const { error: signInError } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
-                options: {
-                    redirectTo: `${window.location.origin}/home`,
-                },
+                options: { redirectTo: `${window.location.origin}/home` },
             });
-
             if (signInError) throw signInError;
         } catch (err) {
             setError(getErrorMessage(err, 'Не удалось начать вход через Google.'));
@@ -66,167 +85,130 @@ export default function Auth() {
     };
 
     return (
-        <main className="grid min-h-screen grid-cols-1 md:grid-cols-2">
-            <section className="hidden flex-col justify-center bg-surface-container-low p-16 md:flex">
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <h1 className="font-headline text-6xl font-bold leading-tight text-on-surface">
-                        Начни свой путь <br />
-                        в <span className="text-primary">IT.</span>
-                    </h1>
-                    <p className="mt-6 text-lg text-on-surface-variant">
-                        Персонализированные треки обучения, сгенерированные нейросетью.
-                    </p>
-                </motion.div>
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="mt-12 rounded-2xl bg-surface-container p-6 font-mono text-sm leading-relaxed text-secondary"
-                >
-                    <p>
-                        <span className="text-tertiary">def</span>{' '}
-                        <span className="text-primary">level_up</span>(xp):
-                    </p>
-                    <p className="pl-4">
-                        if xp &gt; 2400:
-                        <span className="text-on-surface-variant italic"> # Senior Dev</span>
-                    </p>
-                    <p className="pl-8">
-                        <span className="text-tertiary">return</span>{' '}
-                        <span className="text-secondary">"new career"</span>
-                    </p>
-                </motion.div>
-            </section>
+        <main className="relative min-h-screen overflow-hidden bg-background text-on-surface">
+            <div className="app-grid" aria-hidden="true" />
+            <Link
+                to="/"
+                className="absolute left-5 top-5 z-20 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-slate-300 backdrop-blur-xl transition hover:border-primary/30 hover:text-white sm:left-8 sm:top-8"
+            >
+                <ArrowLeft className="h-4 w-4" /> На главную
+            </Link>
 
-            <section className="flex items-center justify-center bg-background p-12">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-md"
-                >
-                    <div className="glass rounded-2xl bg-surface-container-low p-10">
-                        <div className="mb-10 flex gap-8 border-b border-outline-variant/20 pb-4">
-                            <button className="font-headline text-sm font-bold text-primary">
-                                Вход
-                            </button>
+            <div className="mx-auto grid min-h-screen max-w-[92rem] lg:grid-cols-[1.05fr_0.95fr]">
+                <section className="relative hidden flex-col justify-between overflow-hidden border-r border-white/8 px-12 py-12 lg:flex xl:px-20 xl:py-16">
+                    <div className="absolute -left-32 top-20 h-96 w-96 rounded-full bg-primary/15 blur-[120px]" />
+                    <div className="relative z-10 mt-20">
+                        <div className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-cyan-200">
+                            <Route className="h-4 w-4" /> Learning runtime / ready
                         </div>
-
-                        {isSuccess ? (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="py-8 text-center"
-                            >
-                                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
-                                    <CheckCircle2 className="h-10 w-10 text-green-400" />
-                                </div>
-                                <h2 className="mb-3 font-headline text-2xl font-bold text-on-surface">
-                                    Проверьте почту
-                                </h2>
-                                <p className="mb-6 text-on-surface-variant">
-                                    Мы отправили ссылку на вход на{' '}
-                                    <span className="font-medium text-primary">{email}</span>
-                                </p>
-                                <button
-                                    onClick={() => setIsSuccess(false)}
-                                    className="text-primary transition-colors hover:text-primary-dim"
-                                >
-                                    Использовать другой email
-                                </button>
-                            </motion.div>
-                        ) : (
-                            <>
-                                <motion.button
-                                    type="button"
-                                    onClick={() => void handleGoogleLogin()}
-                                    disabled={isGoogleLoading || isMagicLinkLoading}
-                                    className="mb-6 flex w-full items-center justify-center gap-3 rounded-full bg-white py-3.5 font-bold text-black transition-opacity hover:bg-white/90 disabled:opacity-70"
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {isGoogleLoading ? (
-                                        <Loader2 className="h-5 w-5 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Chrome className="h-5 w-5" />
-                                            Войти через Google
-                                        </>
-                                    )}
-                                </motion.button>
-
-                                <div className="relative mb-6 flex items-center py-2">
-                                    <div className="flex-grow border-t border-outline-variant/30"></div>
-                                    <span className="mx-4 text-xs text-on-surface-variant/60">
-                                        ИЛИ ВХОД ПО EMAIL
-                                    </span>
-                                    <div className="flex-grow border-t border-outline-variant/30"></div>
-                                </div>
-
-                                {error && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="mb-6 rounded-xl border border-error/30 bg-error/10 p-4 text-center text-sm text-error"
-                                    >
-                                        {error}
-                                    </motion.div>
-                                )}
-
-                                <form onSubmit={handleMagicLink}>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="name@company.com"
-                                        className="input-glass mb-4 w-full py-3.5"
-                                        required
-                                    />
-                                    <motion.button
-                                        type="submit"
-                                        disabled={isMagicLinkLoading || isGoogleLoading}
-                                        className="btn-neon flex w-full items-center justify-center gap-2 py-4 disabled:opacity-70"
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        {isMagicLinkLoading ? (
-                                            <Loader2 className="h-5 w-5 animate-spin" />
-                                        ) : (
-                                            <>
-                                                <Sparkles className="h-5 w-5" />
-                                                Получить ссылку
-                                                <ArrowRight className="h-5 w-5" />
-                                            </>
-                                        )}
-                                    </motion.button>
-                                </form>
-
-                                <div className="mt-6 rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-on-surface-variant">
-                                    GitHub-вход пока отключён. Пока Google-клиент находится в testing
-                                    mode, войти смогут только адреса, добавленные в тестовые
-                                    пользователи.
-                                </div>
-                            </>
-                        )}
+                        <h1 className="mt-7 max-w-3xl font-headline text-5xl font-bold leading-[1.05] tracking-[-0.055em] text-white xl:text-7xl">
+                            Посмотри продукт.<br />Решение — потом.
+                        </h1>
+                        <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">
+                            Демо открывает готовую траекторию обучения без регистрации, писем и настройки аккаунта.
+                        </p>
                     </div>
 
-                    <p className="mt-6 text-center text-xs text-outline">
-                        Продолжая, вы соглашаетесь с{' '}
-                        <Link to="/terms" className="text-primary hover:underline">
-                            условиями использования
-                        </Link>{' '}
-                        и{' '}
-                        <Link to="/privacy" className="text-primary hover:underline">
-                            политикой конфиденциальности
-                        </Link>
-                        .
-                    </p>
-                </motion.div>
-            </section>
+                    <div className="relative z-10 max-w-xl">
+                        <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">demo.sequence</div>
+                        <div className="relative space-y-3 before:absolute before:bottom-6 before:left-5 before:top-6 before:w-px before:bg-gradient-to-b before:from-primary before:to-primary/10">
+                            {demoSteps.map((step) => (
+                                <div key={step.code} className="relative flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.035] p-4 backdrop-blur-xl">
+                                    <span className="z-10 grid h-10 w-10 flex-none place-items-center rounded-xl bg-[#07101F] font-mono text-xs text-primary ring-1 ring-primary/30">
+                                        {step.code}
+                                    </span>
+                                    <span className="text-sm font-medium text-slate-200">{step.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="flex items-center justify-center px-5 pb-12 pt-24 sm:px-10 lg:pt-12">
+                    <motion.div
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-[31rem]"
+                    >
+                        <div className="mb-7">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[#B8C5FF]">
+                                <Sparkles className="h-3.5 w-3.5" /> access.console
+                            </div>
+                            <h2 className="mt-5 font-headline text-3xl font-bold tracking-tight text-white sm:text-4xl">Войти в VibeStudy</h2>
+                            <p className="mt-3 text-sm leading-6 text-slate-400">Сначала можно посмотреть всё в демо. Аккаунт понадобится только для синхронизации прогресса.</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleDemo}
+                            className="group relative mb-5 flex w-full items-center justify-between overflow-hidden rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.08] p-5 text-left transition hover:border-cyan-300/45 hover:bg-cyan-300/[0.12]"
+                        >
+                            <span className="flex items-center gap-4">
+                                <span className="grid h-11 w-11 place-items-center rounded-xl bg-cyan-300/12 text-cyan-200"><Eye className="h-5 w-5" /></span>
+                                <span>
+                                    <strong className="block text-base text-white">Войти без регистрации</strong>
+                                    <small className="mt-1 block text-sm text-slate-300">Открыть безопасный демо-профиль</small>
+                                </span>
+                            </span>
+                            <ArrowRight className="h-5 w-5 text-cyan-200 transition-transform group-hover:translate-x-1" />
+                        </button>
+
+                        <div className="mb-5 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.16em] text-slate-600">
+                            <span className="h-px flex-1 bg-white/8" /> или сохранить прогресс <span className="h-px flex-1 bg-white/8" />
+                        </div>
+
+                        <div className="rounded-[1.4rem] border border-white/9 bg-[#0D1728]/75 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
+                            {isSuccess ? (
+                                <div className="py-6 text-center">
+                                    <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-emerald-400/10 text-emerald-300"><CheckCircle2 className="h-8 w-8" /></span>
+                                    <h3 className="mt-5 font-headline text-xl font-bold text-white">Проверьте почту</h3>
+                                    <p className="mt-2 text-sm leading-6 text-slate-400">Ссылка для входа отправлена на <span className="text-slate-200">{email}</span>.</p>
+                                    <button type="button" onClick={() => setIsSuccess(false)} className="mt-5 text-sm font-semibold text-primary hover:text-cyan-200">Указать другой email</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => void handleGoogleLogin()}
+                                        disabled={isGoogleLoading || isMagicLinkLoading}
+                                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3.5 text-sm font-bold text-[#07101F] transition hover:bg-slate-100 disabled:opacity-60"
+                                    >
+                                        {isGoogleLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Chrome className="h-5 w-5" /> Продолжить с Google</>}
+                                    </button>
+
+                                    {error ? <div className="mt-4 rounded-xl border border-error/25 bg-error/10 p-3 text-sm text-error">{error}</div> : null}
+
+                                    <form onSubmit={handleMagicLink} className="mt-4">
+                                        <label htmlFor="email" className="mb-2 block text-xs font-semibold text-slate-300">Email для magic link</label>
+                                        <input
+                                            id="email"
+                                            type="email"
+                                            autoComplete="email"
+                                            value={email}
+                                            onChange={(event) => setEmail(event.target.value)}
+                                            placeholder="name@company.com"
+                                            className="input-glass rounded-xl py-3.5"
+                                            required
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={isMagicLinkLoading || isGoogleLoading}
+                                            className="btn-neon mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm disabled:opacity-60"
+                                        >
+                                            {isMagicLinkLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Получить ссылку <ArrowRight className="h-4 w-4" /></>}
+                                        </button>
+                                    </form>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="mt-5 flex items-start gap-3 rounded-xl border border-white/7 px-4 py-3 text-xs leading-5 text-slate-500">
+                            <ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-slate-400" />
+                            Демо не создаёт пользователя в Supabase и не отправляет данные на сервер. Продолжая вход, вы соглашаетесь с <Link to="/terms" className="text-slate-300 hover:text-white">условиями использования</Link> и <Link to="/privacy" className="text-slate-300 hover:text-white">политикой конфиденциальности</Link>.
+                        </div>
+                    </motion.div>
+                </section>
+            </div>
         </main>
     );
 }

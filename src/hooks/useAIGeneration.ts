@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { GeneratedTask } from '../types/database.types';
+import { useAuthStore } from '../stores/useAuthStore';
 
 export interface GeneratedContent {
     theory: string;
@@ -87,6 +88,18 @@ function isReviewResponse(value: unknown): value is TaskReviewResponse {
 }
 
 async function invokeGenerateAction(payload: GenerateRequestPayload) {
+    if (useAuthStore.getState().isDemo) {
+        if (payload.type === 'lesson') {
+            return generateDemoContent(payload.language, payload.day, payload.title, payload.topics);
+        }
+
+        if (payload.type === 'hint') {
+            return generateDemoHint(payload);
+        }
+
+        return generateDemoReview(payload);
+    }
+
     const { data, error } = await supabase.functions.invoke('generate-lesson', {
         body: payload,
     });
@@ -350,7 +363,7 @@ export function useAIGeneration() {
 
             const nextContent: GeneratedContent = {
                 ...data,
-                source: 'ai',
+                source: useAuthStore.getState().isDemo ? 'demo' : 'ai',
             };
 
             setGeneratedContent(nextContent);

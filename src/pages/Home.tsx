@@ -31,7 +31,7 @@ type TrackSnapshot = {
     subtitle: string;
     accent: string;
     recommendation: string;
-    completedLessons: number;
+    completedУроки: number;
     completedTasks: number;
     currentDay: number;
     totalDays: number;
@@ -42,39 +42,39 @@ type TrackSnapshot = {
 
 const courseMeta: Record<string, CourseMeta> = {
     python: {
-        subtitle: 'Automation, backend fundamentals, and practical scripting.',
+        subtitle: 'Автоматизация, основы backend и практические скрипты.',
         accent: 'from-sky-400 via-cyan-300 to-cyan-500',
-        recommendation: 'Best for a strong first track with visible outcomes.',
+        recommendation: 'Сильный первый трек с быстрым видимым результатом.',
     },
     javascript: {
-        subtitle: 'Web interfaces, browser logic, and product-oriented code.',
+        subtitle: 'Веб-интерфейсы, логика браузера и продуктовый код.',
         accent: 'from-cyan-300 via-sky-300 to-violet-400',
-        recommendation: 'The fastest route into frontend and product building.',
+        recommendation: 'Самый быстрый маршрут во frontend и создание продуктов.',
     },
     go: {
-        subtitle: 'Performance, services, and clean backend architecture.',
+        subtitle: 'Производительность, сервисы и чистая backend-архитектура.',
         accent: 'from-cyan-400 via-cyan-300 to-teal-400',
-        recommendation: 'A strong path if you care about systems and APIs.',
+        recommendation: 'Подходит тем, кому интересны системы и API.',
     },
     csharp: {
-        subtitle: '.NET, apps, backend, and real-world service workflows.',
+        subtitle: '.NET, приложения, backend и реальные сервисные сценарии.',
         accent: 'from-fuchsia-400 via-violet-400 to-purple-500',
-        recommendation: 'A practical choice for .NET and enterprise paths.',
+        recommendation: 'Практичный выбор для .NET и enterprise-разработки.',
     },
 };
 
 function getGreeting(hour: number) {
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'Доброе утро';
+    if (hour < 18) return 'Добрый день';
+    return 'Добрый вечер';
 }
 
 function getFirstName(fullName: string | null | undefined) {
     if (!fullName) {
-        return 'Builder';
+        return 'Студент';
     }
 
-    return fullName.trim().split(/\s+/)[0] || 'Builder';
+    return fullName.trim().split(/\s+/)[0] || 'Студент';
 }
 
 export default function Home() {
@@ -88,7 +88,7 @@ export default function Home() {
     const streak = profile?.current_streak ?? 0;
     const level = profile?.level ?? 1;
     const activeTracks = Object.keys(courseProgress).length;
-    const completedLessons = Object.values(courseProgress).reduce(
+    const completedУроки = Object.values(courseProgress).reduce(
         (sum, progress) => sum + progress.completed_days.length,
         0
     );
@@ -97,7 +97,7 @@ export default function Home() {
         totalXp > 0 ||
         streak > 0 ||
         activeTracks > 0 ||
-        completedLessons > 0 ||
+        completedУроки > 0 ||
         completedTaskCount > 0;
 
     useEffect(() => {
@@ -157,7 +157,7 @@ export default function Home() {
                 subtitle: meta.subtitle,
                 accent: meta.accent,
                 recommendation: meta.recommendation,
-                completedLessons: completedCount,
+                completedУроки: completedCount,
                 completedTasks: totalCourseTasks,
                 currentDay,
                 totalDays: course.totalDays,
@@ -171,8 +171,8 @@ export default function Home() {
         [...trackSnapshots]
             .filter((track) => track.started)
             .sort((left, right) => {
-                if (right.completedLessons !== left.completedLessons) {
-                    return right.completedLessons - left.completedLessons;
+                if (right.completedУроки !== left.completedУроки) {
+                    return right.completedУроки - left.completedУроки;
                 }
 
                 return right.completedTasks - left.completedTasks;
@@ -181,27 +181,27 @@ export default function Home() {
     const stats = [
         {
             icon: Zap,
-            label: 'Total XP',
+            label: 'Всего XP',
             value: totalXp.toLocaleString('en-US'),
-            detail: `Level ${level}`,
+            detail: `Уровень ${level}`,
         },
         {
             icon: Flame,
-            label: 'Current streak',
+            label: 'Текущая серия',
             value: `${streak}`,
-            detail: streak > 0 ? 'days in a row' : 'start today',
+            detail: streak > 0 ? 'дней подряд' : 'начни сегодня',
         },
         {
             icon: BookOpen,
-            label: 'Lessons done',
-            value: `${completedLessons}`,
-            detail: `${completedTaskCount} tasks solved`,
+            label: 'Уроков пройдено',
+            value: `${completedУроки}`,
+            detail: `${completedTaskCount} задач решено`,
         },
         {
             icon: Trophy,
-            label: 'Active tracks',
+            label: 'Активных треков',
             value: `${activeTracks}`,
-            detail: hasAnyProgress ? 'saved to the account' : 'clean start',
+            detail: hasAnyProgress ? 'сохранено в профиле' : 'чистый старт',
         },
     ];
 
@@ -219,14 +219,14 @@ export default function Home() {
                         <div>
                             <div className="eyebrow">
                                 <Sparkles className="h-3.5 w-3.5" />
-                                Daily control center
+                                Учебный ритм на сегодня
                             </div>
                             <h1 className="mt-5 max-w-3xl font-headline text-4xl font-bold tracking-tight text-white lg:text-6xl">
-                                {greeting}, {userName}. Build momentum that actually compounds.
+                                {greeting}, {userName}. Продолжай ритм, который превращается в навык.
                             </h1>
                             <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 lg:text-lg">
-                                This is your operating screen for lessons, streak, next XP milestone, and the fastest route
-                                back into focused learning.
+                                Здесь собраны уроки, серия, ближайшая цель по XP и самый короткий путь обратно
+                                к сосредоточенной практике.
                             </p>
 
                             <div className="mt-8 flex flex-wrap gap-3">
@@ -234,38 +234,38 @@ export default function Home() {
                                     to={featuredTrack ? featuredTrack.href : '/lessons'}
                                     className="btn-neon inline-flex items-center gap-2 px-6 py-3 text-sm"
                                 >
-                                    {featuredTrack ? 'Continue active lesson' : 'Start learning route'}
+                                    {featuredTrack ? 'Продолжить урок' : 'Начать маршрут'}
                                     <ArrowRight className="h-4 w-4" />
                                 </Link>
                                 <Link to="/analytics" className="btn-neon-outline inline-flex items-center gap-2 px-6 py-3 text-sm">
-                                    Open analytics
+                                    Открыть аналитику
                                 </Link>
                             </div>
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="metric-chip">
-                                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">XP to next level</p>
+                                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">XP до следующего уровня</p>
                                 <p className="mt-3 text-3xl font-bold text-white">{xpToNextLevel.toLocaleString('en-US')}</p>
-                                <p className="mt-2 text-sm text-slate-300">Keep the rhythm and the next level unlocks itself.</p>
+                                <p className="mt-2 text-sm text-slate-300">Сохраняй ритм — следующий уровень придёт естественно.</p>
                             </div>
                             <div className="metric-chip">
-                                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Primary focus</p>
+                                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Главный фокус</p>
                                 <p className="mt-3 text-xl font-semibold text-white">
-                                    {featuredTrack ? `${featuredTrack.name} day ${featuredTrack.currentDay}` : 'Your first track'}
+                                    {featuredTrack ? `${featuredTrack.name} день ${featuredTrack.currentDay}` : 'Первый трек'}
                                 </p>
                                 <p className="mt-2 text-sm text-slate-300">
-                                    {featuredTrack ? featuredTrack.subtitle : 'Choose a language and complete your first clean learning loop.'}
+                                    {featuredTrack ? featuredTrack.subtitle : 'Выбери язык и пройди первый полный учебный цикл.'}
                                 </p>
                             </div>
                             <div className="metric-chip sm:col-span-2">
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Account signal</p>
+                                        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Состояние прогресса</p>
                                         <p className="mt-3 text-lg font-semibold text-white">
                                             {hasAnyProgress
-                                                ? 'The dashboard is now driven by real account activity only.'
-                                                : 'Fresh start. No fake progress, no invented achievements.'}
+                                                ? 'Экран отражает только реальную активность этого профиля.'
+                                                : 'Чистый старт: без выдуманного прогресса и достижений.'}
                                         </p>
                                     </div>
                                     <div className="hidden h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] lg:flex">
@@ -306,8 +306,8 @@ export default function Home() {
                         {shouldShowOnboarding ? (
                             <div className="surface-premium-soft p-6">
                                 <div className="mb-5">
-                                    <div className="eyebrow">First session</div>
-                                    <h2 className="mt-4 text-2xl font-bold text-white">Start with a clean, guided onboarding.</h2>
+                                    <div className="eyebrow">Первая сессия</div>
+                                    <h2 className="mt-4 text-2xl font-bold text-white">Начни с короткой настройки учебного маршрута.</h2>
                                 </div>
                                 <OnboardingFlow userId={user!.id} userName={userName} />
                             </div>
@@ -320,14 +320,14 @@ export default function Home() {
                             >
                                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                                     <div>
-                                        <div className="eyebrow">Today&apos;s focus</div>
+                                        <div className="eyebrow">Фокус на сегодня</div>
                                         <h2 className="mt-4 text-2xl font-bold text-white">
-                                            {featuredTrack ? 'Continue the strongest active track.' : 'Launch the first lesson.'}
+                                            {featuredTrack ? 'Продолжи самый активный трек.' : 'Открой первый урок.'}
                                         </h2>
                                         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
                                             {featuredTrack
-                                                ? `${featuredTrack.name} is your current momentum leader. Keep the streak, stack XP, and move the track forward.`
-                                                : 'The dashboard is ready. Pick a track, solve the first task, and the product starts reflecting real activity instead of placeholders.'}
+                                                ? `${featuredTrack.name} сейчас ведёт по прогрессу. Сохрани серию, набери XP и двигай маршрут дальше.`
+                                                : 'Всё готово. Выбери трек и реши первую задачу — экран начнёт отражать реальные действия.'}
                                         </p>
                                     </div>
 
@@ -335,7 +335,7 @@ export default function Home() {
                                         to={featuredTrack ? featuredTrack.href : '/lessons'}
                                         className="btn-neon inline-flex items-center gap-2 px-5 py-3 text-sm"
                                     >
-                                        {featuredTrack ? 'Resume lesson' : 'Open lessons'}
+                                        {featuredTrack ? 'Продолжить урок' : 'Открыть уроки'}
                                         <ArrowRight className="h-4 w-4" />
                                     </Link>
                                 </div>
@@ -348,11 +348,11 @@ export default function Home() {
                                                 <p className="mt-1 text-sm text-slate-300">{featuredTrack.subtitle}</p>
                                             </div>
                                             <span className="rounded-full border border-primary/18 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                                                day {featuredTrack.currentDay}
+                                                день {featuredTrack.currentDay}
                                             </span>
                                         </div>
                                         <div className="mb-2 flex items-center justify-between text-sm">
-                                            <span className="text-slate-400">Track completion</span>
+                                            <span className="text-slate-400">Прогресс трека</span>
                                             <span className="text-white">{featuredTrack.progressPercent}%</span>
                                         </div>
                                         <div className="h-2 overflow-hidden rounded-full bg-white/6">
@@ -374,11 +374,11 @@ export default function Home() {
                         >
                             <div className="mb-6 flex items-end justify-between gap-4">
                                 <div>
-                                    <div className="eyebrow">Track map</div>
-                                    <h2 className="mt-4 text-2xl font-bold text-white">Your active learning routes</h2>
+                                    <div className="eyebrow">Карта треков</div>
+                                    <h2 className="mt-4 text-2xl font-bold text-white">Твои учебные маршруты</h2>
                                 </div>
                                 <Link to="/lessons" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition hover:text-white">
-                                    Open all lessons
+                                    Все уроки
                                     <ArrowRight className="h-4 w-4" />
                                 </Link>
                             </div>
@@ -400,14 +400,14 @@ export default function Home() {
                                                 <p className="text-sm text-slate-300">{track.subtitle}</p>
                                             </div>
                                             <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-400">
-                                                {track.started ? `${track.progressPercent}%` : 'new'}
+                                                {track.started ? `${track.progressPercent}%` : 'новый'}
                                             </span>
                                         </div>
 
                                         <div className="mb-3 flex items-center justify-between text-sm">
-                                            <span className="text-slate-400">Lessons</span>
+                                            <span className="text-slate-400">Уроки</span>
                                             <span className="text-white">
-                                                {track.completedLessons}/{track.totalDays}
+                                                {track.completedУроки}/{track.totalDays}
                                             </span>
                                         </div>
                                         <div className="h-2 overflow-hidden rounded-full bg-white/6">
@@ -418,14 +418,14 @@ export default function Home() {
                                         </div>
                                         <p className="mt-4 text-sm leading-6 text-slate-300">
                                             {track.started
-                                                ? `You are currently on day ${track.currentDay}, with ${track.completedTasks} saved tasks in this route.`
+                                                ? `You are currently on день ${track.currentDay}, with ${track.completedTasks} сохранённых задач в этом треке.`
                                                 : track.recommendation}
                                         </p>
                                         <Link
                                             to={track.href}
                                             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:text-secondary"
                                         >
-                                            {track.started ? 'Continue track' : 'Start track'}
+                                            {track.started ? 'Продолжить трек' : 'Начать трек'}
                                             <ArrowRight className="h-4 w-4" />
                                         </Link>
                                     </motion.div>
@@ -441,21 +441,21 @@ export default function Home() {
                             transition={{ delay: 0.16 }}
                             className="surface-premium-soft p-6"
                         >
-                            <div className="eyebrow">Account signal</div>
-                            <h2 className="mt-4 text-xl font-bold text-white">What matters next</h2>
+                            <div className="eyebrow">Состояние прогресса</div>
+                            <h2 className="mt-4 text-xl font-bold text-white">Что важно дальше</h2>
                             <div className="mt-5 space-y-3">
                                 {[
                                     {
-                                        label: 'Next XP milestone',
+                                        label: 'Ближайшая цель по XP',
                                         value: `${xpToNextLevel.toLocaleString('en-US')} XP left`,
                                     },
                                     {
-                                        label: 'Current learning state',
-                                        value: hasAnyProgress ? `${completedLessons} lessons completed` : 'Fresh account with no synthetic data',
+                                        label: 'Текущее состояние',
+                                        value: hasAnyProgress ? `${completedУроки} уроков пройдено` : 'Fresh account with no synthetic data',
                                     },
                                     {
-                                        label: 'Best return path',
-                                        value: featuredTrack ? `${featuredTrack.name} day ${featuredTrack.currentDay}` : 'Open day 1 in Lessons',
+                                        label: 'Лучший следующий шаг',
+                                        value: featuredTrack ? `${featuredTrack.name} день ${featuredTrack.currentDay}` : 'Открыть первый день в уроках',
                                     },
                                 ].map((item) => (
                                     <div key={item.label} className="rounded-[1.2rem] border border-white/10 bg-white/[0.03] px-4 py-4">
@@ -472,21 +472,21 @@ export default function Home() {
                             transition={{ delay: 0.22 }}
                             className="surface-premium-soft p-6"
                         >
-                            <div className="eyebrow">Quick launch</div>
-                            <h2 className="mt-4 text-xl font-bold text-white">Jump into the right surface</h2>
+                            <div className="eyebrow">Быстрый переход</div>
+                            <h2 className="mt-4 text-xl font-bold text-white">Перейди к нужному инструменту</h2>
                             <div className="mt-5 grid gap-3">
                                 {[
                                     {
                                         to: '/playground',
                                         icon: Code2,
-                                        title: 'Playground',
-                                        body: 'Try snippets, iterate, and test small ideas fast.',
+                                        title: 'Лаборатория',
+                                        body: 'Проверяй фрагменты кода и быстро тестируй идеи.',
                                     },
                                     {
                                         to: '/analytics',
                                         icon: TrendingUp,
-                                        title: 'Analytics',
-                                        body: 'Inspect only real account data, not demo metrics.',
+                                        title: 'Аналитика',
+                                        body: 'Посмотри динамику текущего профиля без декоративных метрик.',
                                     },
                                 ].map((item) => (
                                     <Link

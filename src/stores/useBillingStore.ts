@@ -18,6 +18,7 @@ import {
     hasEntitlement,
     type CheckoutSessionResult,
 } from '../lib/billing';
+import { DEMO_USER_ID } from '../lib/demo';
 
 interface BillingState {
     ownerUserId: string | null;
@@ -62,6 +63,20 @@ export const useBillingStore = create<BillingState>((set, get) => ({
     error: null,
 
     hydrate: async (userId) => {
+        if (userId === DEMO_USER_ID) {
+            set({
+                ownerUserId: DEMO_USER_ID,
+                subscription: null,
+                entitlements: [],
+                featureUsage: [],
+                paymentOrders: [],
+                access: initialAccessState,
+                isLoading: false,
+                error: null,
+            });
+            return;
+        }
+
         if (!userId) {
             get().clear();
             return;
@@ -100,6 +115,11 @@ export const useBillingStore = create<BillingState>((set, get) => ({
     },
 
     startCheckout: async (planCode, options) => {
+        if (get().ownerUserId === DEMO_USER_ID) {
+            set({ error: 'В демо-режиме оплата отключена. Создайте аккаунт, чтобы выбрать тариф.' });
+            return null;
+        }
+
         set({ isStartingCheckout: true, error: null });
 
         try {

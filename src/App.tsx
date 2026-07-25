@@ -1,8 +1,7 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { useEffect, lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
-import MobileNotSupported from './pages/MobileNotSupported';
 import Auth from './pages/Auth';
 import { resetAnalyticsUser } from './lib/analytics';
 import { useAuthStore } from './stores/useAuthStore';
@@ -28,6 +27,18 @@ const PageLoader = () => (
         </div>
     </div>
 );
+
+function DemoEntry() {
+    const enterDemo = useAuthStore((state) => state.enterDemo);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        enterDemo();
+        navigate('/home', { replace: true });
+    }, [enterDemo, navigate]);
+
+    return <PageLoader />;
+}
 
 function ProtectedRoute() {
     const { user, isInitialized, isLoading } = useAuthStore();
@@ -58,31 +69,23 @@ function PublicOnlyRoute() {
 }
 
 function App() {
-    const { initialize, user, isInitialized } = useAuthStore();
-    const { fetchProgress, resetProgress } = useProgressStore();
+    const { initialize, user, isInitialized, isDemo } = useAuthStore();
+    const { fetchProgress, loadDemoProgress, resetProgress } = useProgressStore();
     const { hydrate: hydrateBilling, clear: clearBilling } = useBillingStore();
-    const [isMobile, setIsMobile] = useState(false);
 
-    useEffect(() => {
-        const checkMobile = () => {
-            const userAgent = navigator.userAgent || navigator.vendor;
-            const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-                userAgent.toLowerCase()
-            );
-            const isSmallScreen = window.innerWidth < 768;
-            setIsMobile(isMobileDevice || isSmallScreen);
-        };
 
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
 
     useEffect(() => {
         void initialize();
     }, [initialize]);
 
     useEffect(() => {
+        if (isInitialized && isDemo) {
+            loadDemoProgress();
+            clearBilling();
+            return;
+        }
+
         if (isInitialized && user?.id) {
             void fetchProgress(user.id);
             void hydrateBilling(user.id);
@@ -94,17 +97,15 @@ function App() {
             clearBilling();
             resetAnalyticsUser();
         }
-    }, [isInitialized, user, fetchProgress, resetProgress, hydrateBilling, clearBilling]);
+    }, [isInitialized, isDemo, user, fetchProgress, loadDemoProgress, resetProgress, hydrateBilling, clearBilling]);
 
-    if (isMobile) {
-        return <MobileNotSupported />;
-    }
 
     return (
         <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
                 <Routes>
                     <Route path="/" element={<Landing />} />
+                    <Route path="demo" element={<DemoEntry />} />
                     <Route path="pricing" element={<Pricing />} />
                     <Route path="privacy" element={<Privacy />} />
                     <Route path="terms" element={<Terms />} />
