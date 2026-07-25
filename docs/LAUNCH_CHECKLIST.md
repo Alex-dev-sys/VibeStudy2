@@ -28,7 +28,7 @@
   `generate-lesson`, `reset-user-state`, `create-checkout-session`, `billing-webhook`,
   `cancel-crypto-subscription`.
 - [ ] Required function secrets are present:
-  `OPENAI_API_KEY`, `APP_BASE_URL`, `CRYPTOMUS_MERCHANT_UUID`, `CRYPTOMUS_PAYMENT_API_KEY`,
+  `HF_TOKEN`, `HF_MODEL`, optional `OPENAI_API_KEY`, `APP_BASE_URL`, `CRYPTOMUS_MERCHANT_UUID`, `CRYPTOMUS_PAYMENT_API_KEY`,
   `CRYPTOMUS_INVOICE_CURRENCY`, `CRYPTOMUS_PRO_MONTHLY_AMOUNT`, `CRYPTOMUS_PRO_THREE_MONTH_AMOUNT`.
 
 ## 4. Billing

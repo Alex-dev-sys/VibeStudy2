@@ -6,7 +6,7 @@ VibeStudy — учебная платформа для практическог�
 
 - React 19, TypeScript, Vite и Tailwind CSS.
 - Supabase Auth, Postgres/RLS и Edge Functions.
-- Серверная генерация уроков через OpenAI: ключ провайдера не попадает в браузер.
+- Серверная генерация уроков через Hugging Face Router и Qwen3 Coder: ключ провайдера не попадает в браузер.
 - Бесплатный тариф: один выбранный трек, первые 3 дня и 3 AI-подсказки в день.
 - Pro на 30 или 90 дней через одноразовую оплату Binance Pay без автопродления.
 - Атомарные серверные лимиты, проверка срока подписки и кэш уроков.
@@ -23,7 +23,7 @@ cp .env.example .env
 npm run dev
 ```
 
-В `.env` укажите публичные `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY`. Секреты OpenAI и Binance Pay хранятся только в Supabase Edge Functions.
+В `.env` укажите публичные `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY`. Секреты Hugging Face, OpenAI и Binance Pay хранятся только в Supabase Edge Functions.
 
 ## Проверки
 
@@ -50,7 +50,11 @@ npx supabase db push
 Добавьте секреты Edge Functions:
 
 ```text
-OPENAI_API_KEY
+AI_PROVIDER=huggingface
+HF_TOKEN
+HF_MODEL=Qwen/Qwen3-Coder-30B-A3B-Instruct:scaleway
+OPENAI_API_KEY # optional fallback
+AI_FALLBACK_ENABLED=true
 APP_BASE_URL
 BINANCE_PAY_API_KEY
 BINANCE_PAY_SECRET_KEY

@@ -49,12 +49,12 @@ fix it immediately or give the user a concrete next step.
 
 - Confirm whether the failure is for lesson generation, hint, or review.
 - Check `generate-lesson` logs in Supabase.
-- Check whether `OPENAI_API_KEY` is present and valid.
+- Check whether `HF_TOKEN` is present and valid; if fallback is enabled, also check `OPENAI_API_KEY`.
 - Check whether the user is free-tier locked by track/day/hint limits.
 
 ### Likely causes
 
-- OpenAI outage or key issue;
+- Hugging Face/provider outage or key issue;
 - function deployment mismatch;
 - billing/free-tier enforcement blocking the request;
 - malformed request payload from frontend.

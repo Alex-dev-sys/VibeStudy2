@@ -1,4 +1,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.90.1';
+import {
+    getAiCacheNamespace,
+    getAiProviderConfigs,
+    requestJsonCompletion,
+} from '../_shared/ai-provider.ts';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -240,56 +245,9 @@ Rules:
 - Do not mention automated tests or hidden validation.`;
 }
 
-function extractJson(raw: string) {
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) {
-        throw new Error('Could not parse AI response.');
-    }
-
-    return JSON.parse(match[0]) as unknown;
-}
-
-async function requestJsonCompletion(apiKey: string, prompt: string, maxTokens: number) {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-                {
-                    role: 'system',
-                    content: 'You are an experienced programming instructor. Reply with valid JSON only.',
-                },
-                {
-                    role: 'user',
-                    content: prompt,
-                },
-            ],
-            temperature: 0.7,
-            max_tokens: maxTokens,
-            response_format: { type: 'json_object' },
-        }),
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`OpenAI request failed with ${response.status}: ${errorText}`);
-    }
-
-    const result = await response.json();
-    const content = result.choices?.[0]?.message?.content;
-    if (!content || typeof content !== 'string') {
-        throw new Error('Empty response from AI provider.');
-    }
-
-    return extractJson(content);
-}
-
-async function hashPayload(payload: GenerateLessonPayload) {
+async function hashPayload(payload: GenerateLessonPayload, cacheNamespace: string) {
     const normalized = JSON.stringify({
+        cacheNamespace,
         language: payload.language.trim().toLowerCase(),
         day: payload.day,
         title: payload.title.trim().toLowerCase(),
@@ -468,16 +426,16 @@ Deno.serve(async (request) => {
             return Response.json({ error: 'Invalid payload.' }, { status: 400, headers: corsHeaders });
         }
 
-        const apiKey = Deno.env.get('OPENAI_API_KEY');
-        if (!apiKey) {
-            throw new Error('Missing OPENAI_API_KEY secret in Edge Functions environment.');
+        const aiProviders = getAiProviderConfigs();
+        if (aiProviders.length === 0) {
+            throw new Error('Missing HF_TOKEN or OPENAI_API_KEY secret in Edge Functions environment.');
         }
 
         await checkRateLimit(getRequesterKey(user.id));
 
         if (isLessonPayload(payload)) {
             await reserveFeatureUsage(user.id, 'lesson_generation', payload);
-            const cacheKey = await hashPayload(payload);
+            const cacheKey = await hashPayload(payload, getAiCacheNamespace(aiProviders));
             const cachedLesson = await getCachedLesson(cacheKey);
             if (cachedLesson) {
                 return Response.json(cachedLesson, {
@@ -485,7 +443,10 @@ Deno.serve(async (request) => {
                 });
             }
 
-            const lesson = await requestJsonCompletion(apiKey, buildLessonPrompt(payload), 4000);
+            const lesson = await requestJsonCompletion(aiProviders, buildLessonPrompt(payload), 4000, {
+                onProviderError: (provider, providerError) =>
+                    console.error(`${provider.name} lesson generation failed`, providerError),
+            });
             if (!isLesson(lesson)) {
                 throw new Error('AI returned an invalid lesson schema.');
             }
@@ -498,7 +459,10 @@ Deno.serve(async (request) => {
 
         if (isHintPayload(payload)) {
             await reserveFeatureUsage(user.id, 'ai_hint', payload);
-            const hint = await requestJsonCompletion(apiKey, buildHintPrompt(payload), 700);
+            const hint = await requestJsonCompletion(aiProviders, buildHintPrompt(payload), 700, {
+                onProviderError: (provider, providerError) =>
+                    console.error(`${provider.name} hint generation failed`, providerError),
+            });
             if (!isHintResponse(hint)) {
                 throw new Error('AI returned an invalid hint schema.');
             }
@@ -507,7 +471,10 @@ Deno.serve(async (request) => {
         }
 
         await reserveFeatureUsage(user.id, 'ai_review', payload);
-        const review = await requestJsonCompletion(apiKey, buildReviewPrompt(payload), 900);
+        const review = await requestJsonCompletion(aiProviders, buildReviewPrompt(payload), 900, {
+            onProviderError: (provider, providerError) =>
+                console.error(`${provider.name} review generation failed`, providerError),
+        });
         if (!isReviewResponse(review)) {
             throw new Error('AI returned an invalid review schema.');
         }
