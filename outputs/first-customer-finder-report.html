@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Первые пользователи VibeStudy</title>
+  <style>
+    :root{--bg:#090b0f;--panel:#12161d;--panel2:#191f28;--ink:#f5f2ea;--muted:#9ca6b5;--line:#2b3340;--acid:#d9ff63;--blue:#69b7ff;--orange:#ff8f5a;--cyan:#5ee8d0;--radius:18px;--shadow:0 24px 80px rgba(0,0,0,.38)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;background:repeating-linear-gradient(135deg,rgba(255,255,255,.018) 0 1px,transparent 1px 12px);mask-image:linear-gradient(#000,transparent 82%)}a{color:inherit}.skip{position:absolute;left:-9999px}.skip:focus{left:16px;top:16px;z-index:9;background:var(--acid);color:#111;padding:10px}
+    .shell{width:min(1180px,calc(100% - 40px));margin:auto;position:relative}.top{display:flex;justify-content:space-between;align-items:center;padding:22px 0;border-bottom:1px solid var(--line)}.brand{font-weight:850;display:flex;align-items:center;gap:10px}.brand i{width:12px;height:12px;border-radius:50%;background:var(--acid);box-shadow:0 0 22px var(--acid)}.meta{display:flex;gap:8px;align-items:center}.chip,.stage{border:1px solid var(--line);border-radius:999px;padding:7px 10px;color:var(--muted);font:750 11px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.07em}button{background:var(--ink);color:#111;border:0;border-radius:999px;padding:9px 14px;font:800 13px inherit;cursor:pointer}button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+    .hero{display:grid;grid-template-columns:1.45fr .55fr;gap:36px;align-items:end;padding:72px 0 42px}.eyebrow{color:var(--acid);font:750 11px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.11em}h1{font-size:clamp(48px,7vw,92px);line-height:.92;letter-spacing:-.065em;margin:13px 0 24px}.verdict{font-size:clamp(18px,2.1vw,25px);color:#dce1e9;max-width:820px;margin:0}.hero-card{background:var(--acid);color:#10120d;padding:26px;border-radius:var(--radius);box-shadow:var(--shadow);transform:rotate(1deg)}.hero-card span{font:800 11px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em}.hero-card strong{display:block;font-size:64px;line-height:1;letter-spacing:-.08em;margin:15px 0 6px}.hero-card p{margin:0;font-weight:700;font-size:13px}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:28px}.stats>div{padding:18px;background:var(--panel)}.stats>div+div{border-left:1px solid var(--line)}.stats span,.prospect-grid span,.signal span,.evidence span,blockquote span{display:block;color:var(--muted);font:700 10px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}.stats strong{font-size:17px}
+    .best{display:grid;grid-template-columns:180px 1fr auto;gap:24px;align-items:center;padding:25px;background:var(--orange);color:#1b0f09;border-radius:var(--radius);box-shadow:var(--shadow);margin:0 0 72px}.best-label{font:800 11px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em}.best h2{font-size:clamp(28px,4vw,46px);letter-spacing:-.045em;line-height:1;margin:0 0 8px}.best p{margin:0}.best strong{font-size:44px}
+    .section-head{display:flex;justify-content:space-between;align-items:end;gap:24px;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:18px}.section-head h2{font-size:clamp(34px,5vw,62px);line-height:.98;letter-spacing:-.055em;margin:0}.section-head p{color:var(--muted);max-width:470px;margin:0}
+    .prospects{display:grid;gap:16px;margin-bottom:76px}.prospect{background:linear-gradient(135deg,var(--panel),#0f1319);border:1px solid var(--line);border-radius:var(--radius);padding:25px;box-shadow:0 12px 38px rgba(0,0,0,.18)}.prospect-head{display:grid;grid-template-columns:54px 1fr 92px;gap:17px;align-items:start}.rank{font:850 24px ui-monospace,monospace;color:var(--acid);padding-top:8px}.identity h3{font-size:29px;letter-spacing:-.04em;margin:6px 0 10px}.stage{display:inline-block}.stage.hot{color:var(--orange);border-color:rgba(255,143,90,.5)}.stage.warm{color:var(--cyan);border-color:rgba(94,232,208,.45)}.score{--score:0;width:88px;height:88px;border-radius:50%;display:grid;place-content:center;text-align:center;background:radial-gradient(circle,var(--panel) 58%,transparent 60%),conic-gradient(var(--acid) calc(var(--score)*1%),var(--line) 0)}.score strong{font-size:26px;line-height:1}.score small{color:var(--muted)}
+    .signal{margin:21px 0 12px;padding:16px;background:var(--panel2);border-left:4px solid var(--acid)}.signal p{font-size:17px;margin:0}.prospect-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.prospect-grid>div,.evidence>div{border:1px solid var(--line);border-radius:12px;padding:15px;background:rgba(255,255,255,.018)}.prospect-grid p,.evidence p{margin:0}blockquote{margin:12px 0 0;padding:16px;border:1px dashed rgba(217,255,99,.55);border-radius:12px;color:#eaf6c6}details{margin-top:10px}summary{cursor:pointer;color:var(--acid);font-weight:800;padding:10px 0}.evidence{display:grid;grid-template-columns:1fr 1fr;gap:9px}.evidence a{display:inline-block;color:var(--blue);margin-top:8px;word-break:break-word}.metrics{display:grid;gap:8px;margin-top:14px}.metric{display:grid;grid-template-columns:145px 1fr 40px;gap:12px;align-items:center;font-size:13px}.track{height:8px;background:var(--line);border-radius:8px;overflow:hidden}.track i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--acid))}
+    .patterns{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:76px}.pattern{display:grid;grid-template-columns:42px 1fr auto;gap:15px;align-items:start;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.pattern-num{color:var(--acid);font:800 13px ui-monospace,monospace}.pattern h3{margin:0 0 5px}.pattern p{margin:0;color:var(--muted)}.pattern>strong{font-size:30px;color:var(--acid)}
+    .plan{display:grid;grid-template-columns:.8fr 1.2fr;gap:28px;background:var(--acid);color:#111;padding:29px;border-radius:var(--radius);margin-bottom:30px}.plan h2{font-size:38px;line-height:1;letter-spacing:-.045em;margin:10px 0}.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.plan-grid>div{border:1px solid rgba(0,0,0,.24);border-radius:11px;padding:13px}.plan-grid span{display:block;font:750 10px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}.plan-grid p{margin:0}.limits{border:1px solid var(--line);border-radius:var(--radius);padding:24px;color:var(--muted);margin-bottom:60px}.limits h2{color:var(--ink);margin-top:0}footer{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding:22px 0 40px;color:var(--muted);font-size:12px}.reveal{animation:rise .4s ease both}@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+    @media(max-width:820px){.shell{width:min(100% - 24px,1180px)}.hero,.plan{grid-template-columns:1fr}.hero{padding-top:44px}.hero-card{transform:none}.stats{grid-template-columns:1fr 1fr}.stats>div+div{border-left:0;border-top:1px solid var(--line)}.best{grid-template-columns:1fr}.prospect-head{grid-template-columns:38px 1fr}.score{grid-column:1/-1}.prospect-grid,.evidence,.patterns,.plan-grid{grid-template-columns:1fr}.meta .chip{display:none}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}@media print{body{background:#fff;color:#111}body:before,.top button{display:none}.shell{width:100%}.prospect,.pattern,.limits{background:#fff;color:#111;break-inside:avoid}.prospect-grid span,.signal span,.evidence span,blockquote span{color:#444}}
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to report</a>
+  <div class="shell">
+    <header class="top"><div class="brand"><i></i> First Customer Finder</div><div class="meta"><span class="chip">Public signals only</span><button type="button" onclick="window.print()">Print / Save PDF</button></div></header>
+    <main id="main">
+      <section class="hero"><div><span class="eyebrow">Early-customer report · 2026-07-25</span><h1>Первые пользователи VibeStudy</h1><p class="verdict">Достижимые ранние пользователи есть, но это пока узкий рынок сигналов, а не доказанный спрос. Самый сильный сегмент — люди, которые уже пробовали учиться, бросили и публично объявили о возвращении. Начинать стоит с трёх свежих ручных разговоров, а не с рекламы.</p></div><aside class="hero-card"><span>Qualified prospects</span><strong>5</strong><p>Potential customers based on public signals.</p></aside></section>
+      <section class="stats"><div><span>Product</span><strong><a href="https://vibe-study2.vercel.app" target="_blank" rel="noreferrer">VibeStudy — ежедневная практика программирования</a></strong></div><div><span>Target customer</span><strong>Русскоязычный новичок или возвращающийся самоучка, которому не хватает короткого ежедневного ритма и практики в браузере</strong></div><div><span>High intent</span><strong>1</strong></div><div><span>Average fit score</span><strong>81/100</strong></div></section>
+      <section class="best"><div class="best-label">Highest-confidence prospect</div><div><h2>Николай Никитенок (@nikitenok)</h2><p>Возвращение началось в марте 2026 года; он публично ведёт процесс и открыт к обратной связи через профиль.</p></div><strong>95</strong></section>
+      <section><header class="section-head"><h2>People with a reason<br>to care now.</h2><p>Every primary prospect is tied to a public pain, demand, or timing signal. Open the evidence before considering outreach.</p></header><div class="prospects">
+    <article class="prospect reveal">
+      <header class="prospect-head">
+        <div class="rank">01</div>
+        <div class="identity">
+          <span class="eyebrow">Публичный профессиональный профиль</span>
+          <h3>Николай Никитенок (@nikitenok)</h3>
+          <span class="stage hot">High intent</span>
+        </div>
+        <div class="score" style="--score:95" aria-label="Fit score 95 out of 100"><strong>95</strong><small>/100</small></div>
+      </header>
+      <div class="signal"><span>Public signal</span><p>После полутора-двух лет вне программирования Николай публично начал путь заново и прямо опасается снова бросить всё на середине.</p></div>
+      <div class="prospect-grid">
+        <div><span>Why it fits</span><p>VibeStudy даёт короткую ежедневную сессию, видимый прогресс и следующий конкретный шаг — именно те опоры, которых не хватает при возвращении после большого перерыва.</p></div>
+        <div><span>Why now</span><p>Возвращение началось в марте 2026 года; он публично ведёт процесс и открыт к обратной связи через профиль.</p></div>
+        <div><span>Suggested channel</span><p>Короткий комментарий под исходной публикацией</p></div>
+        <div><span>Caution</span><p>Не предполагать, что прежняя проблема всё ещё актуальна; сначала спросить, как идёт возвращение сейчас.</p></div>
+      </div>
+      <blockquote><span>Suggested opener</span>Николай, увидел ваш пост о возвращении после двухлетнего перерыва и страхе снова остановиться. Я собираю VibeStudy — короткие ежедневные сессии по программированию на 20–30 минут с практикой прямо в браузере. Не хочу продавать вслепую: интересно, помог бы такой формат удержать ваш нынешний ритм или для возвращения важнее работа над одним публичным проектом?</blockquote>
+      <details>
+        <summary>Evidence and score breakdown</summary>
+        <div class="evidence"><div><span>Evidence</span><p>В свежей публикации он описал прежний активный период обучения, длительный перерыв и намерение показывать проекты, ошибки и результаты публично.</p></div><div><span>Source</span><p>Публичная публикация на vc.ru · 2026-03-09</p><a href="https://vc.ru/dev/2786165-vozvrashchenie-k-programmirovaniyu" target="_blank" rel="noreferrer">Я 2 года не программировал и решил начать заново ↗</a></div></div>
+        <div class="metrics"><div class="metric"><span>Pain strength</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div><div class="metric"><span>Product fit</span><div class="track"><i style="width:80%"></i></div><b>4/5</b></div><div class="metric"><span>Timing</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div><div class="metric"><span>Reachability</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div><div class="metric"><span>Evidence quality</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div></div>
+      </details>
+    </article>
+    <article class="prospect reveal">
+      <header class="prospect-head">
+        <div class="rank">02</div>
+        <div class="identity">
+          <span class="eyebrow">Публичный создатель проекта</span>
+          <h3>Данила, автор RayLauncher</h3>
+          <span class="stage warm">Trigger present</span>
+        </div>
+        <div class="score" style="--score:85" aria-label="Fit score 85 out of 100"><strong>85</strong><small>/100</small></div>
+      </header>
+      <div class="signal"><span>Public signal</span><p>Данила ранее забросил Python-проект, затем вернулся, обновил стек и отдельно отметил, что устойчивость проекта зависит от мотивации и живой аудитории.</p></div>
+      <div class="prospect-grid">
+        <div><span>Why it fits</span><p>Он уже не абсолютный новичок, но может стать сильным дизайн-партнёром для проверки, помогает ли короткий трек поддерживать регулярность между большими релизами и закрывать пробелы в JavaScript.</p></div>
+        <div><span>Why now</span><p>Проект снова активен, автор собирает обратную связь и публично приглашает обсуждать идеи и функции.</p></div>
+        <div><span>Suggested channel</span><p>Комментарий под статьёй</p></div>
+        <div><span>Caution</span><p>Вероятно, Python-трек уже слишком прост; проверять ценность как дизайн-партнёра, а не считать готовым покупателем.</p></div>
+      </div>
+      <blockquote><span>Suggested opener</span>Данила, понравилась честная часть истории RayLauncher: проект сначала лежал без движения, а после возвращения дошёл до релизов и живых скачиваний. Я делаю VibeStudy — короткую ежедневную практику кода без длинных лекций. Вы уже выше уровня типичного новичка, поэтому ваш фидбек особенно полезен: такой формат помог бы держать ритм между релизами или оказался бы слишком базовым?</blockquote>
+      <details>
+        <summary>Evidence and score breakdown</summary>
+        <div class="evidence"><div><span>Evidence</span><p>В свежей истории разработки он описал заброшенный Fresh Launcher, возвращение к нему в 2026 году, переход на PyQt6, самостоятельное изучение HTML/CSS и потребность в тёплом сообществе.</p></div><div><span>Source</span><p>Публичная публикация на vc.ru · 2026-07 (точная дата на странице не видна)</p><a href="https://vc.ru/dev/3026447-sozdanie-raylauncher-istoriya-razrabotki" target="_blank" rel="noreferrer">Как я создал RayLauncher: история разработки ↗</a></div></div>
+        <div class="metrics"><div class="metric"><span>Pain strength</span><div class="track"><i style="width:80%"></i></div><b>4/5</b></div><div class="metric"><span>Product fit</span><div class="track"><i style="width:60%"></i></div><b>3/5</b></div><div class="metric"><span>Timing</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div><div class="metric"><span>Reachability</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div><div class="metric"><span>Evidence quality</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div></div>
+      </details>
+    </article>
+    <article class="prospect reveal">
+      <header class="prospect-head">
+        <div class="rank">03</div>
+        <div class="identity">
+          <span class="eyebrow">Публичный автор и студент-самоучка</span>
+          <h3>Василий Орлов</h3>
+          <span class="stage warm">Problem aware</span>
+        </div>
+        <div class="score" style="--score:82" aria-label="Fit score 82 out of 100"><strong>82</strong><small>/100</small></div>
+      </header>
+      <div class="signal"><span>Public signal</span><p>Василий учится программированию самостоятельно по вечерам между парами и подработкой и подчёркивает, что не всегда понимает происходящее при использовании AI-инструментов.</p></div>
+      <div class="prospect-grid">
+        <div><span>Why it fits</span><p>Короткая учебная сессия и разбор решения могут дать более безопасный путь к пониманию, чем генерация больших фрагментов кода агентом.</p></div>
+        <div><span>Why now</span><p>Он прямо сейчас тестирует разные способы учиться и недавно публично систематизировал опыт для других новичков.</p></div>
+        <div><span>Suggested channel</span><p>Комментарий под исходной статьёй</p></div>
+        <div><span>Caution</span><p>Статья может быть обзорной; сначала подтвердить, что он действительно ищет учебный формат, а не только сравнивает инструменты.</p></div>
+      </div>
+      <blockquote><span>Suggested opener</span>Василий, увидел ваш разбор AI-инструментов и мысль о том, что новичку важно понимать каждое действие, а не просто принимать сгенерированный код. В VibeStudy мы пробуем другой ритм: 20–30 минут, одна тема, одна задача и разбор решения. Поместился бы такой формат между парами и подработкой, или для вас сейчас полезнее практика на собственном проекте?</blockquote>
+      <details>
+        <summary>Evidence and score breakdown</summary>
+        <div class="evidence"><div><span>Evidence</span><p>В свежем публичном обзоре инструментов он неоднократно описывает себя как новичка, ограниченное время и потребность видеть изменения, понимать код и контролировать действия помощника.</p></div><div><span>Source</span><p>Публичная публикация на vc.ru · 2026-07 (источник найден в течение последних двух недель)</p><a href="https://vc.ru/life/3013716-testirovanie-ii-instrumentov-dlya-programmirovaniya" target="_blank" rel="noreferrer">Я полгода тестил ИИ-инструменты для кода, мне есть что сказать ↗</a></div></div>
+        <div class="metrics"><div class="metric"><span>Pain strength</span><div class="track"><i style="width:60%"></i></div><b>3/5</b></div><div class="metric"><span>Product fit</span><div class="track"><i style="width:80%"></i></div><b>4/5</b></div><div class="metric"><span>Timing</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div><div class="metric"><span>Reachability</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div><div class="metric"><span>Evidence quality</span><div class="track"><i style="width:80%"></i></div><b>4/5</b></div></div>
+      </details>
+    </article>
+    <article class="prospect reveal">
+      <header class="prospect-head">
+        <div class="rank">04</div>
+        <div class="identity">
+          <span class="eyebrow">Публичный профиль Habr Q&amp;A</span>
+          <h3>refoq (@refoq)</h3>
+          <span class="stage warm">Problem aware</span>
+        </div>
+        <div class="score" style="--score:73" aria-label="Fit score 73 out of 100"><strong>73</strong><small>/100</small></div>
+      </header>
+      <div class="signal"><span>Public signal</span><p>Автор понимает основы JavaScript, но впадает в ступор при переходе от примеров к собственному приложению и не знает, с каких функций и переменных начать.</p></div>
+      <div class="prospect-grid">
+        <div><span>Why it fits</span><p>Практические задачи с небольшим объёмом теории могут помочь перейти от пассивного понимания к самостоятельному написанию кода.</p></div>
+        <div><span>Why now</span><p>Явного свежего триггера нет; профиль пригоден только для осторожной проверки, сохранилась ли проблема.</p></div>
+        <div><span>Suggested channel</span><p>Публичный комментарий к вопросу, только если обсуждение ещё активно</p></div>
+        <div><span>Caution</span><p>Сигнал старый; не предлагать продукт до подтверждения текущей актуальности.</p></div>
+      </div>
+      <blockquote><span>Suggested opener</span>Вы раньше описывали знакомый разрыв: примеры по JavaScript понятны, а собственное приложение сложно начать с чистого листа. Мы сделали демо VibeStudy с короткими задачами прямо в браузере. Эта проблема у вас ещё актуальна или за прошедшее время вы уже нашли рабочий способ переходить от темы к своему коду?</blockquote>
+      <details>
+        <summary>Evidence and score breakdown</summary>
+        <div class="evidence"><div><span>Evidence</span><p>В публичном вопросе и уточняющих комментариях он отделяет знание учебных примеров от неспособности декомпозировать более крупный проект.</p></div><div><span>Source</span><p>Публичный вопрос на Habr Q&amp;A · Более двух лет назад</p><a href="https://qna.habr.com/q/1189902" target="_blank" rel="noreferrer">Как начать писать код? ↗</a></div></div>
+        <div class="metrics"><div class="metric"><span>Pain strength</span><div class="track"><i style="width:80%"></i></div><b>4/5</b></div><div class="metric"><span>Product fit</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div><div class="metric"><span>Timing</span><div class="track"><i style="width:20%"></i></div><b>1/5</b></div><div class="metric"><span>Reachability</span><div class="track"><i style="width:60%"></i></div><b>3/5</b></div><div class="metric"><span>Evidence quality</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div></div>
+      </details>
+    </article>
+    <article class="prospect reveal">
+      <header class="prospect-head">
+        <div class="rank">05</div>
+        <div class="identity">
+          <span class="eyebrow">Публичный профиль Habr Q&amp;A</span>
+          <h3>equalym (@twitchblazpir)</h3>
+          <span class="stage warm">Problem aware</span>
+        </div>
+        <div class="score" style="--score:68" aria-label="Fit score 68 out of 100"><strong>68</strong><small>/100</small></div>
+      </header>
+      <div class="signal"><span>Public signal</span><p>Школьник хотел стать full-stack-разработчиком, уже пробовал собирать интерфейсы, но не понимал последовательность изучения HTML, CSS, JavaScript и backend.</p></div>
+      <div class="prospect-grid">
+        <div><span>Why it fits</span><p>Последовательный JavaScript-трек с практикой в браузере соответствует запросу на ясный первый маршрут без необходимости выбирать из десятков курсов.</p></div>
+        <div><span>Why now</span><p>Сигнал старше года, поэтому текущий уровень и интерес неизвестны.</p></div>
+        <div><span>Suggested channel</span><p>Публичный комментарий к вопросу, если профиль остаётся активным</p></div>
+        <div><span>Caution</span><p>Возраст, уровень и цель могли существенно измениться; сначала подтвердить актуальность, не использовать прежний школьный статус в персонализации.</p></div>
+      </div>
+      <blockquote><span>Suggested opener</span>Вы спрашивали о понятном порядке изучения frontend и практике с JavaScript. В VibeStudy есть короткие последовательные уроки с задачей прямо в браузере. Прежде чем что-то предлагать: актуален ли ещё этот маршрут или за прошедший год вы уже выбрали направление и вышли за уровень вводного трека?</blockquote>
+      <details>
+        <summary>Evidence and score breakdown</summary>
+        <div class="evidence"><div><span>Evidence</span><p>Публичный вопрос содержит конкретный запрос на базу, практику и понятный порядок обучения для создания качественных сайтов.</p></div><div><span>Source</span><p>Публичный вопрос на Habr Q&amp;A · Более года назад</p><a href="https://qna.habr.com/q/1381192" target="_blank" rel="noreferrer">Какие советы помогут стать FullStack-developer? ↗</a></div></div>
+        <div class="metrics"><div class="metric"><span>Pain strength</span><div class="track"><i style="width:80%"></i></div><b>4/5</b></div><div class="metric"><span>Product fit</span><div class="track"><i style="width:80%"></i></div><b>4/5</b></div><div class="metric"><span>Timing</span><div class="track"><i style="width:20%"></i></div><b>1/5</b></div><div class="metric"><span>Reachability</span><div class="track"><i style="width:60%"></i></div><b>3/5</b></div><div class="metric"><span>Evidence quality</span><div class="track"><i style="width:100%"></i></div><b>5/5</b></div></div>
+      </details>
+    </article></div></section>
+      <section><header class="section-head"><h2>Signals that repeat.</h2><p>Patterns across prospects reveal the strongest positioning, workflow, and outreach angles.</p></header><div class="patterns">
+    <article class="pattern reveal"><span class="pattern-num">01</span><div><h3>Начал, остановился, возвращается</h3><p>Сильнейший триггер — не первый интерес к коду, а повторный старт после заброшенного курса или проекта.</p></div><strong>3×</strong></article>
+    <article class="pattern reveal"><span class="pattern-num">02</span><div><h3>Понимает урок, но не пишет сам</h3><p>Люди описывают разрыв между просмотром примеров и самостоятельной декомпозицией задачи; практика должна быть главным экраном продукта.</p></div><strong>4×</strong></article>
+    <article class="pattern reveal"><span class="pattern-num">03</span><div><h3>Учёба конкурирует с основной жизнью</h3><p>Пары, работа и собственные проекты делают обещание 20–30 минут более убедительным, чем обещание быстрого трудоустройства.</p></div><strong>3×</strong></article>
+    <article class="pattern reveal"><span class="pattern-num">04</span><div><h3>ИИ допустим только с пониманием</h3><p>Для части аудитории AI-код вызывает недоверие; позиционировать модель стоит как разбор и обратную связь, а не как автора решения.</p></div><strong>2×</strong></article></div></section>
+      <section class="plan"><div><span class="eyebrow" style="color:#111">Seven-day manual plan</span><h2>Предлагать не курс, а семидневный ручной тест учебного ритма: одна короткая сессия в день и личный запрос обратной связи после третьего и седьмого дня.</h2></div><div class="plan-grid"><div><span>First step</span><p>В первый день оставить три коротких публичных комментария Николая, Даниле и Василию, каждый — только под исходным материалом и с одним вопросом о текущем процессе.</p></div><div><span>Follow-up</span><p>Если человек подтвердит проблему, дать ссылку на демо и предложить выбрать один трек; на третий день спросить, где он остановился и почему. Старые Habr-профили трогать только после отсутствия трёх свежих разговоров.</p></div><div><span>Success signal</span><p>За семь дней получить три содержательных разговора, двух людей, прошедших минимум три сессии, и одного человека, готового продолжить после демо или назвать приемлемую цену.</p></div><div><span>Research scope</span><p>Публичные русскоязычные источники; приоритет — последние 12 месяцев, плюс два сильных устаревших сигнала с предупреждением</p></div></div></section>
+      <section class="limits"><h2>Use this shortlist responsibly</h2><ul><li>Это потенциальные пользователи по публичным сигналам, а не подтверждённые покупатели.</li><li>Только три сигнала достаточно свежие; два Habr-кандидата требуют обязательной перепроверки актуальности.</li><li>Публичные источники не подтверждают готовность платить, приемлемую цену или предпочтительный способ оплаты.</li><li>VibeStudy сейчас русскоязычный, поэтому сильные англоязычные сигналы сознательно не включены в основной список.</li><li>Для Данилы и, возможно, Василия вводные треки могут оказаться слишком базовыми; это нужно выяснить до предложения подписки.</li><li>Не отправлять сообщения массово и не переносить профили в CRM без отдельного разрешения.</li></ul></section>
+    </main>
+    <footer><span>Generated by $first-customer-finder</span><span>Outreach is never sent automatically.</span></footer>
+  </div>
+</body>
+</html>
